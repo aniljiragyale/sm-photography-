@@ -1,0 +1,141 @@
+/* Base */
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  background-color: #111;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Services Section */
+.services-section {
+  background: linear-gradient(to right, #1a1a1a, #000);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+.services-section h1 {
+  color: #ffd700;
+  font-size: 2.8rem;
+  margin-bottom: 40px;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+}
+
+/* Grid layout */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+/* Card Styling */
+.service-card {
+  background-color: #1c1c1c;
+  border: 2px solid #ffd700;
+  border-radius: 16px;
+  padding: 25px 20px;
+  text-align: left;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+  transition: 0.4s ease;
+}
+
+.service-card:hover {
+  background-color: #2a2a2a;
+  transform: translateY(-8px);
+  box-shadow: 0 12px 25px rgba(255, 215, 0, 0.2);
+}
+
+.service-card h3 {
+  color: #ffd700;
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+}
+
+.service-card p {
+  color: #ccc;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Back Button */
+.back-btn {
+  display: inline-block;
+  margin-top: 50px;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  padding: 12px 26px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #ffd700;
+  color: #111;
+  box-shadow: 0 0 15px #ffd70099;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .services-section h1 {
+    font-size: 2.4rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.4rem;
+  }
+
+  .service-card p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .services-section h1 {
+    font-size: 2.2rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.3rem;
+  }
+
+  .service-card p {
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .services-section {
+    padding: 50px 10px;
+  }
+
+  .services-section h1 {
+    font-size: 2rem;
+  }
+
+  .service-card {
+    padding: 20px 16px;
+  }
+
+  .service-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .service-card p {
+    font-size: 0.95rem;
+  }
+
+  .back-btn {
+    font-size: 0.9rem;
+    padding: 10px 20px;
+  }
+}

@@ -1,0 +1,386 @@
+/* Base Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #0d0d0d;
+  color: #fff;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+h1, h2 {
+  font-weight: 700;
+}
+
+/* Header Section */
+.main-header {
+  height: 100vh;
+  background: url('../images/Prewedding\ \(21\).jpg') no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding-top: 60px;
+ 
+}
+
+.overlay {
+  background-color: rgba(0, 0, 0, 0.5); /* Lighter overlay */
+  padding: 50px 20px;
+  border-radius: 10px;
+  max-width: 800px;
+  z-index: 2;
+}
+
+
+.main-header h1 {
+  font-size: 1.8rem;
+  color: #ffd700;
+  margin-bottom: 20px;
+}
+
+.main-header p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #eee;
+}
+
+.header-buttons .btn {
+  display: inline-block;
+  padding: 12px 24px;
+  margin: 8px;
+  background-color: #ffd700;
+  color: #000;
+  border-radius: 30px;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.header-buttons .btn:hover {
+  background-color: #fff;
+  color: #000;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border: 2px solid #ffd700;
+  color: #ffd700;
+}
+
+.btn-secondary:hover {
+  background-color: #ffd700;
+  color: #000;
+}
+
+/* Top Navigation */
+.top-nav {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  z-index: 10;
+}
+
+.top-nav ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+.top-nav a {
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 15px;
+  transition: 0.3s ease;
+  border-radius: 6px;
+}
+
+.top-nav a:hover {
+  background-color: #ffd700;
+  color: #000;
+}
+
+.menu-toggle {
+  display: none;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+  z-index: 11;
+}
+
+/* Gallery */
+.gallery-section {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.gallery-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 60px;
+  align-items: center;
+  gap: 20px;
+}
+
+.gallery-row.reverse {
+  flex-direction: row-reverse;
+}
+
+.gallery-image {
+  flex: 1 1 300px;
+  height: 400px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.gallery-text {
+  flex: 1 1 300px;
+  padding: 20px;
+}
+
+.gallery-text h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #ffd700;
+}
+
+.gallery-text p {
+  font-size: 1rem;
+  color: #ccc;
+}
+
+/* Studio Overview */
+.studio-overview {
+  background: #111;
+  padding: 50px 20px;
+  text-align: center;
+}
+
+.studio-overview h2 {
+  color: #ffd700;
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.studio-overview p {
+  max-width: 800px;
+  margin: 0 auto 15px;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+/* Footer */
+footer {
+  background-color: #000;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gallery-row {
+    flex-direction: column;
+  }
+
+  .gallery-image {
+    height: 300px;
+    width: 100%;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .top-nav {
+    top: 0;
+    left: -100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    position: fixed;
+    height: 100vh;
+    width: 70%;
+    flex-direction: column;
+    padding-top: 80px;
+    transition: left 0.3s ease;
+  }
+
+  .top-nav.active {
+    left: 0;
+  }
+
+  .top-nav ul {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+    padding-left: 20px;
+  }
+
+  .top-nav a {
+    font-size: 1.2rem;
+    padding: 10px 0;
+  }
+}
+/* Logo - enlarged for desktop */
+.overlay .logo {
+  width: 140px;
+  margin-bottom: 25px;
+}
+
+/* Optional: adjust for smaller devices */
+@media (max-width: 768px) {
+  .overlay .logo {
+    width: 100px;
+    margin-bottom: 20px;
+  }
+}
+/* Visit Gallery Section */
+.visit-gallery {
+  background: #1a1a1a;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.visit-gallery h2 {
+  color: #ffd700;
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.visit-gallery p {
+  color: #ccc;
+  max-width: 700px;
+  margin: 0 auto 25px;
+  font-size: 1rem;
+}
+
+.visit-gallery .visit-btn {
+  padding: 12px 28px;
+  background-color: #ffd700;
+  color: #000;
+  font-weight: bold;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.visit-gallery .visit-btn:hover {
+  background-color: #fff;
+  color: #000;
+}
+.studio-overview {
+  background: #111;
+  padding: 60px 20px;
+  color: #eee;
+  text-align: center;
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+}
+
+.studio-overview h2 {
+  font-size: 2.2rem;
+  color: #ffd700;
+  margin-bottom: 25px;
+  font-weight: 700;
+}
+
+.studio-overview p {
+  font-size: 1.1rem;
+  max-width: 800px;
+  margin: 15px auto;
+  line-height: 1.8;
+  color: #ccc;
+}
+.contact-section {
+  background: #111;
+  color: #fff;
+  padding: 50px 20px;
+  text-align: center;
+}
+
+.contact-container {
+  max-width: 900px;
+  margin: auto;
+}
+
+.contact-section h2 {
+  color: #ffd700;
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+}
+
+.contact-message {
+  font-size: 1rem;
+  color: #ccc;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.contact-details {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 30px;
+}
+
+.contact-details li {
+  margin: 10px 0;
+  font-size: 1rem;
+  color: #eee;
+}
+
+.contact-details i {
+  margin-right: 8px;
+  color: #ffd700;
+}
+
+.contact-details a {
+  color: #ffd700;
+  text-decoration: none;
+}
+
+.contact-details a:hover {
+  text-decoration: underline;
+}
+
+.social-links a {
+  margin: 0 10px;
+  font-size: 1.4rem;
+  color: #ffd700;
+  transition: transform 0.3s ease;
+}
+
+.social-links a:hover {
+  color: #fff;
+  transform: scale(1.2);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .contact-section h2 {
+    font-size: 1.6rem;
+  }
+
+  .contact-message {
+    font-size: 0.95rem;
+  }
+
+  .contact-details li {
+    font-size: 0.95rem;
+  }
+}

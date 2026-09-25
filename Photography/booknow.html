@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Your Photography Session</title>
+  <link rel="stylesheet" href="css/booknow.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <section class="booking-section">
+    <div class="container">
+      <h2>📷 Book Your Photography Session</h2>
+      <form class="booking-form">
+        <div class="form-row">
+          <input type="text" name="first_name" placeholder="First Name" required />
+          <input type="text" name="last_name" placeholder="Last Name" required />
+        </div>
+
+        <div class="form-row">
+          <input type="email" name="email" placeholder="Email" required />
+          <input type="tel" name="phone" placeholder="Contact Number" required />
+        </div>
+
+        <div class="form-row">
+          <select name="event_type" id="eventType" required onchange="toggleOtherInput('eventType', 'eventTypeOther')">
+            <option value="" disabled selected>Select Event</option>
+            <option>Wedding</option>
+            <option>Pre-Wedding</option>
+            <option>Maternity</option>
+            <option>Birthday</option>
+            <option>Corporate</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" name="event_type_other" id="eventTypeOther" placeholder="Specify Other Event" style="display:none;"/>
+        </div>
+
+        <div class="form-row">
+          <select name="package" id="packageSelect" required onchange="toggleOtherInput('packageSelect', 'packageOther')">
+            <option value="" disabled selected>Select Package</option>
+            <option>Silver</option>
+            <option>Gold</option>
+            <option>Diamond</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" name="package_other" id="packageOther" placeholder="Specify Other Package" style="display:none;"/>
+        </div>
+
+        <div class="form-row">
+          <input type="date" name="event_date" required />
+        </div>
+
+        <div class="form-row">
+          <input type="text" name="venue" placeholder="Venue / Location" required />
+        </div>
+
+        <div class="form-row">
+          <textarea name="schedule" placeholder="Event Schedule (e.g., 10AM - 5PM)" rows="3" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <select name="referral" id="referralSelect" onchange="toggleOtherInput('referralSelect', 'referralOther')">
+            <option value="" disabled selected>How did you hear about us?</option>
+            <option>Instagram</option>
+            <option>Facebook</option>
+            <option>Google</option>
+            <option>Friend/Referral</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" name="referral_other" id="referralOther" placeholder="Please specify" style="display:none;"/>
+        </div>
+
+        <button type="submit" class="submit-btn">📨 Send Request</button>
+      </form>
+    </div>
+   <a href="index.html" class="back-btn">← Back to Home</a>
+  </section>
+
+  <script>
+    function toggleOtherInput(selectId, inputId) {
+      const select = document.getElementById(selectId);
+      const input = document.getElementById(inputId);
+      if (select.value === "Other") {
+        input.style.display = "block";
+        input.required = true;
+      } else {
+        input.style.display = "none";
+        input.required = false;
+        input.value = "";
+      }
+    }
+
+
+  </script>
+<!-- EmailJS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+  (function () {
+    emailjs.init("maflsnReFToHBCinG"); // Your Public Key
+  })();
+
+  // Handle form submission
+  document.querySelector(".booking-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    // Optional: Validate custom "Other" fields
+    const eventType = document.getElementById("eventType");
+    const packageSelect = document.getElementById("packageSelect");
+    const referralSelect = document.getElementById("referralSelect");
+
+    const form = this;
+    const button = form.querySelector(".submit-btn");
+    button.innerText = "Sending...";
+
+    emailjs.sendForm("service_i5zylvb", "template_ac748dj", this)
+      .then(() => {
+        alert("🎉 Booking submitted successfully! We'll get back to you soon.");
+        form.reset();
+        document.getElementById("eventTypeOther").style.display = "none";
+        document.getElementById("packageOther").style.display = "none";
+        document.getElementById("referralOther").style.display = "none";
+        button.innerText = "📨 Send Request";
+      }, (error) => {
+        console.error("EmailJS Error:", error);
+        alert("❌ Something went wrong. Please try again.");
+        button.innerText = "📨 Send Request";
+      });
+  });
+
+  // Show/hide 'Other' fields
+  function toggleOtherInput(selectId, inputId) {
+    const select = document.getElementById(selectId);
+    const input = document.getElementById(inputId);
+    if (select.value === "Other") {
+      input.style.display = "block";
+      input.required = true;
+    } else {
+      input.style.display = "none";
+      input.required = false;
+      input.value = "";
+    }
+  }
+
+  window.toggleOtherInput = toggleOtherInput;
+</script>
+
+</body>
+</html>
