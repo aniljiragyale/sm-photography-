@@ -7,6 +7,8 @@ import { defaultGalleryItems, galleryCategories, loadPublishedContent, type Gall
 export default function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(defaultGalleryItems);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     loadPublishedContent().then((content) => setGalleryItems([...defaultGalleryItems, ...content.gallery]));
@@ -16,6 +18,12 @@ export default function GalleryPage() {
     if (activeCategory === 'all') return galleryItems;
     return galleryItems.filter((item) => item.category === activeCategory);
   }, [activeCategory, galleryItems]);
+  const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const visibleItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory]);
 
   return (
     <div className="page-shell">
@@ -42,7 +50,7 @@ export default function GalleryPage() {
         </div>
 
         <div className="gallery-grid">
-          {filteredItems.map((item) => {
+          {visibleItems.map((item) => {
             const imageUrl = encodeURI(item.image);
 
             return (
@@ -57,6 +65,17 @@ export default function GalleryPage() {
             );
           })}
         </div>
+        {pageCount > 1 ? (
+          <div className="gallery-pagination" aria-label="Gallery pagination">
+            <button type="button" className="btn btn-secondary" disabled={page === 1} onClick={() => setPage((current) => current - 1)}>
+              Previous
+            </button>
+            <span>Page {page} of {pageCount}</span>
+            <button type="button" className="btn btn-primary" disabled={page === pageCount} onClick={() => setPage((current) => current + 1)}>
+              Next
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

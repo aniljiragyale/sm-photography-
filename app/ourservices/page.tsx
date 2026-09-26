@@ -24,14 +24,24 @@ export default function ServicesPage() {
 
       <div className="page-content">
         <div className="services-grid-plain">
-          {services.map((service) => (
-            <div key={service.title} className="service-card-plain">
+          {services.map((service, index) => (
+            <div key={service.title} className="service-card-plain animated-card" style={{ animationDelay: `${index * 80}ms` }}>
               <h3>{service.title}</h3>
               <p>{service.description}</p>
               <p className="service-deliverables"><strong>What you receive:</strong> {service.deliverables}</p>
             </div>
           ))}
         </div>
+
+        <section className="customisation-banner" aria-label="Custom photography services">
+          <p className="eyebrow">Your idea, our craft</p>
+          <h2>Looking for a customised service?</h2>
+          <p>
+            Every celebration is different. We can tailor the team, coverage, locations, deliverables, and creative direction
+            to suit your story. Get in touch and let us plan something personal.
+          </p>
+          <Link href="/contact" className="btn btn-primary">Discuss your requirements</Link>
+        </section>
       </div>
     </div>
   );

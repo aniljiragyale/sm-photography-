@@ -44,7 +44,7 @@ export default function PortfolioPage() {
             </div>
             <div>
               <strong>Available for</strong>
-              <span>Sangli, Kolhapur, Pune &amp; Bangalore</span>
+              <span>Malgaon and Miraj</span>
             </div>
             <div>
               <strong>Direct contact</strong>

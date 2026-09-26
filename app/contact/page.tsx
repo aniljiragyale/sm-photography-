@@ -52,15 +52,18 @@ export default function ContactPage() {
               <strong>Branch 1:</strong> <a href="https://maps.app.goo.gl/AwgoQrcp92duJkoT6" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Malgaon</a>
             </li>
             <li>
-              <strong>Branch 2:</strong> <a href="https://share.google/ZnDunM3nDt7smSKDr" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Miraj Sangli Miraj Kupwad</a>
+              <strong>Branch 2:</strong> <a href="https://share.google/ZnDunM3nDt7smSKDr" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Miraj</a>
             </li>
           </ul>
 
           <div className="social-links" style={{ marginTop: '1.25rem' }}>
             <a href="https://www.linkedin.com/in/satishmolekar" target="_blank" rel="noreferrer" aria-label="LinkedIn">in</a>
             <a href="https://www.facebook.com/share/1FDbovcGCA" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
-            <a href="https://www.instagram.com/sm_photography_official__/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <a href="https://www.instagram.com/the_sm_studio__/?utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>
+            </a>
+            <a href="https://www.instagram.com/sm_photography.in?stkn=MXQ2amRrbHhkZXdjbA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="SM Photography Instagram">
+              <span style={{ fontSize: '0.7rem' }}>SM</span>
             </a>
             <a href="https://youtube.com/@sm_photography_film" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
             <a href="https://wa.me/9511835507" target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>

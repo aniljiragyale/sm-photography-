@@ -97,19 +97,19 @@ export default function AdminPage() {
     const nextItems = [...getCustomGalleryItems(), newItem];
     saveCustomGalleryItems(nextItems);
     const content = await loadPublishedContent();
-    await savePublishedContent({ packages, services, gallery: [...content.gallery, newItem], branches: content.branches }, ADMIN_PASSWORD);
+    const isPublished = await savePublishedContent({ packages, services, gallery: [...content.gallery, newItem], branches: content.branches }, ADMIN_PASSWORD);
     setItems([...defaultGalleryItems, ...content.gallery, newItem]);
     setForm(initialForm);
-    setMessage('New gallery item added successfully.');
+    setMessage(isPublished ? 'New gallery item added successfully and is now visible in the public gallery.' : 'The photo was saved on this device, but could not be published.');
   };
 
   const removeItem = async (id: string) => {
     const nextItems = getCustomGalleryItems().filter((item) => item.id !== id);
     saveCustomGalleryItems(nextItems);
     const content = await loadPublishedContent();
-    await savePublishedContent({ packages, services, gallery: content.gallery.filter((item) => item.id !== id), branches: content.branches }, ADMIN_PASSWORD);
+    const isPublished = await savePublishedContent({ packages, services, gallery: content.gallery.filter((item) => item.id !== id), branches: content.branches }, ADMIN_PASSWORD);
     setItems([...defaultGalleryItems, ...content.gallery.filter((item) => item.id !== id)]);
-    setMessage('Item removed from the public gallery.');
+    setMessage(isPublished ? 'Item removed from the public gallery.' : 'The item was removed on this device, but the public gallery could not be updated.');
   };
 
   const logout = () => {
@@ -233,6 +233,24 @@ export default function AdminPage() {
           </section>
 
           <section className="admin-card">
+            <h2>Client event galleries</h2>
+            <p className="form-note">
+              Create private event galleries, upload event photos, and share the generated event code with your client.
+            </p>
+            <div className="admin-actions">
+              <Link href="/studio-login?next=%2Fstudio%2Fevents%2Fnew" className="submit-btn">
+                Create Event
+              </Link>
+              <Link href="/studio-login?next=%2Fstudio%2Fevents" className="btn btn-secondary">
+                View Events
+              </Link>
+            </div>
+            <p className="form-note">
+              Event management uses the Studio service login. If you are asked to sign in, open Studio Login first.
+            </p>
+          </section>
+
+          <section className="admin-card">
             <h2>Live gallery items</h2>
             <div className="admin-item-list">
               {customItems.length === 0 ? (
@@ -287,9 +305,19 @@ export default function AdminPage() {
                   <label>Service title<input className="field" value={item.title} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, title: event.target.value } : entry))} /></label>
                   <label>Description<textarea className="field" rows={4} value={item.description} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, description: event.target.value } : entry))} /></label>
                   <label>What the client receives<textarea className="field" rows={3} value={item.deliverables} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, deliverables: event.target.value } : entry))} /></label>
+                  <button type="button" className="btn btn-secondary" onClick={() => setServices((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+                    Remove service
+                  </button>
                 </div>
               ))}
             </div>
+            <button
+              type="button"
+              className="submit-btn"
+              onClick={() => setServices((current) => [...current, { title: 'New Service', description: '', deliverables: '' }])}
+            >
+              + Add another service
+            </button>
 
             <h3 className="admin-section-title">Studio branches</h3>
             <div className="content-editor-list">

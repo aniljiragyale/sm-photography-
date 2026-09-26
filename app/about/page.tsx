@@ -46,7 +46,7 @@ export default function AboutPage() {
 
       <div className="page-content">
         <div className="page-grid">
-          <div>
+          <div className="about-intro-image">
             <img
               src="/images/MY PHOTO.jpg"
               alt="Satish Molekar of SM Photography"
@@ -54,7 +54,7 @@ export default function AboutPage() {
             />
           </div>
 
-          <div>
+          <div className="about-intro-copy">
             <h2>Capturing life with feeling</h2>
             <p>
               Based in Malgaon, Sangli district, I have a deep-rooted passion for photography and specialize in capturing not just moments — but emotions, stories, and connections that last a lifetime.
@@ -72,8 +72,8 @@ export default function AboutPage() {
         </div>
 
         <div className="services-grid-plain" style={{ marginTop: '2rem' }}>
-          {strengths.map((item) => (
-            <div key={item.title} className="info-card">
+          {strengths.map((item, index) => (
+            <div key={item.title} className="info-card animated-card" style={{ animationDelay: `${index * 90}ms` }}>
               <h3>{item.title}</h3>
               <p>{item.description}</p>
             </div>
@@ -84,8 +84,8 @@ export default function AboutPage() {
           <p className="eyebrow">Visit our studios</p>
           <h2>Studio branches</h2>
           <div className="branch-grid">
-            {branches.map((branch) => (
-              <article className="branch-card" key={branch.id}>
+            {branches.map((branch, index) => (
+              <article className="branch-card animated-card" key={branch.id} style={{ animationDelay: `${index * 100}ms` }}>
                 {branch.image ? <img src={branch.image} alt={branch.name} /> : null}
                 <div className="branch-card-copy">
                   <h3>{branch.name}</h3>

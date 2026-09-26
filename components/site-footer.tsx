@@ -9,6 +9,8 @@ export function SiteFooter() {
           <Link href="/contact">Contact</Link>
           {' • '}
           <Link href="/gallery">Gallery</Link>
+          {' • '}
+          <Link href="/admin/login">Admin Login</Link>
         </div>
       </div>
     </footer>

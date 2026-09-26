@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 
 const galleryMoments = [
   {
@@ -49,10 +52,10 @@ const galleryMoments = [
 ];
 
 const stats = [
-  { label: 'Weddings', value: '200+' },
-  { label: 'Pre-wedding', value: '150+' },
-  { label: 'Portraits', value: '500+' },
-  { label: 'Events', value: '350+' },
+  { label: 'Weddings', value: 200 },
+  { label: 'Pre-wedding', value: 150 },
+  { label: 'Portraits', value: 500 },
+  { label: 'Events', value: 350 },
 ];
 
 const photoHighlights = [
@@ -82,7 +85,55 @@ const services = [
   'Drone Shoot',
 ];
 
+const reviews = [
+  { quote: 'The photographs feel full of emotion and every important family moment was beautifully captured.', name: 'Anita Desai', role: 'Wedding client', initials: 'AD' },
+  { quote: 'Professional, comfortable, and creative from the first consultation to the final gallery.', name: 'Sarah Jenkins', role: 'Pre-wedding client', initials: 'SJ' },
+  { quote: 'The team made our celebration feel effortless and delivered memories we will keep forever.', name: 'Rahul Sharma', role: 'Event client', initials: 'RS' },
+  { quote: 'Beautiful direction, thoughtful details, and photographs that look natural and timeless.', name: 'David Lim', role: 'Portrait client', initials: 'DL' },
+];
+
 export default function HomePage() {
+  const statsRef = useRef<HTMLElement | null>(null);
+  const reviewsRef = useRef<HTMLDivElement | null>(null);
+  const [statsStarted, setStatsStarted] = useState(false);
+  const [counts, setCounts] = useState(stats.map(() => 0));
+
+  useEffect(() => {
+    const element = statsRef.current;
+    if (!element || typeof IntersectionObserver === 'undefined') {
+      setStatsStarted(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setStatsStarted(entry.isIntersecting);
+      if (!entry.isIntersecting) setCounts(stats.map(() => 0));
+    }, { threshold: 0.25 });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!statsStarted) return;
+    const startedAt = performance.now();
+    const duration = 1400;
+    let frame = 0;
+
+    const animate = (now: number) => {
+      const progress = Math.min((now - startedAt) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCounts(stats.map((item) => Math.round(item.value * eased)));
+      if (progress < 1) frame = requestAnimationFrame(animate);
+    };
+
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [statsStarted]);
+
+  useEffect(() => {
+    return undefined;
+  }, []);
+
   return (
     <>
       <header className="hero-section">
@@ -110,10 +161,10 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="stats-strip" aria-label="Business stats">
-        {stats.map((item) => (
+      <section ref={statsRef} className="stats-strip" aria-label="Business stats">
+        {stats.map((item, index) => (
           <div key={item.label} className="stat-box">
-            <span>{item.value}</span>
+            <span>{counts[index]}+</span>
             <small>{item.label}</small>
           </div>
         ))}
@@ -127,8 +178,8 @@ export default function HomePage() {
           </div>
 
           <div className="feature-grid">
-            {photoHighlights.map((item) => (
-              <div key={item.title} className="feature-card">
+            {photoHighlights.map((item, index) => (
+              <div key={item.title} className="feature-card animated-card" style={{ animationDelay: `${index * 110}ms` }}>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
               </div>
@@ -138,11 +189,15 @@ export default function HomePage() {
       </section>
 
       <section className="gallery-section">
-        {galleryMoments.map((item) => {
+        {galleryMoments.map((item, itemIndex) => {
           const imageUrl = encodeURI(item.image);
 
           return (
-            <div key={item.title} className={`gallery-row ${item.reverse ? 'reverse' : ''}`}>
+            <div
+              key={item.title}
+              className={`gallery-row gallery-reveal ${item.reverse ? 'reverse' : ''}`}
+              style={{ animationDelay: `${itemIndex * 90}ms` }}
+            >
               <div className="gallery-image" style={{ backgroundImage: `url("${imageUrl}")` }} />
               <div className="gallery-text">
                 <h2>{item.title}</h2>
@@ -168,21 +223,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="studio-overview section-block">
-        <div className="container narrow">
-          <h2>About Studio</h2>
-          <p>
-            Welcome to <strong>SM Photography</strong>, founded by <strong>Satish Molekar</strong> and based in Malgaon Sangli — where timeless moments are captured with passion, creativity, and care.
-          </p>
-          <p>
-            Every photograph we take is a reflection of emotion, beauty, and a unique story waiting to be told. Our studio is equipped with modern technology and warm, welcoming spaces designed to make each session comfortable and memorable.
-          </p>
-          <p>
-            Whether you are celebrating love, expecting a new life, launching a brand, or embracing everyday joy — we are here to frame those special moments into everlasting memories.
-          </p>
-        </div>
-      </section>
-
       <section className="services-showcase section-block">
         <div className="container">
           <div className="section-heading">
@@ -190,14 +230,43 @@ export default function HomePage() {
             <h2>Signature Services</h2>
           </div>
           <div className="services-grid">
-            {services.map((service) => (
-              <div key={service} className="service-card">
+            {services.map((service, index) => (
+              <div key={service} className="service-card animated-card" style={{ animationDelay: `${index * 75}ms` }}>
                 <h3>{service}</h3>
                 <p>
                   Crafted with artistic direction, thoughtful planning, and professional execution to turn your vision into timeless imagery.
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="reviews-section section-block" aria-labelledby="reviews-title">
+        <div className="container">
+          <div className="section-heading reviews-heading">
+            <div>
+              <p className="eyebrow">Kind words from clients</p>
+              <h2 id="reviews-title">Memories that speak for themselves</h2>
+            </div>
+          </div>
+          <div className="reviews-track" id="reviews-track" ref={reviewsRef}>
+            <div className="reviews-loop">
+              {[0, 1].map((group) => (
+                <div className="reviews-group" aria-hidden={group === 1} key={group}>
+                  {reviews.map((review) => (
+                    <article className="review-card" key={`${group}-${review.name}`}>
+                      <div className="review-stars" aria-label="5 out of 5 stars">★★★★★</div>
+                      <p className="review-quote">“{review.quote}”</p>
+                      <div className="review-author">
+                        <span className="review-avatar">{review.initials}</span>
+                        <span><strong>{review.name}</strong><small>{review.role}</small></span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -232,15 +301,18 @@ export default function HomePage() {
               <strong>Branch 1:</strong> <a href="https://maps.app.goo.gl/AwgoQrcp92duJkoT6" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Malgaon</a>
             </li>
             <li>
-              <strong>Branch 2:</strong> <a href="https://share.google/ZnDunM3nDt7smSKDr" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Miraj Sangli Miraj Kupwad</a>
+              <strong>Branch 2:</strong> <a href="https://share.google/ZnDunM3nDt7smSKDr" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Miraj</a>
             </li>
           </ul>
 
           <div className="social-links">
             <a href="https://www.linkedin.com/in/satishmolekar" target="_blank" rel="noreferrer" aria-label="LinkedIn">in</a>
             <a href="https://www.facebook.com/share/1FDbovcGCA" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
-            <a href="https://www.instagram.com/sm_photography_official__/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <a href="https://www.instagram.com/sm_photography.in?stkn=MXQ2amRrbHhkZXdjbA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="SM Photography Instagram">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>
+            </a>
+            <a href="https://www.instagram.com/the_sm_studio__?stkn=ZzU2eW1oenUwdXVl&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="The SM Studio Instagram">
+              <span style={{ fontSize: '0.7rem' }}>SM</span>
             </a>
             <a href="https://youtube.com/@sm_photography_film" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
             <a href="https://wa.me/9511835507" target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>

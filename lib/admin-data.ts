@@ -18,6 +18,7 @@ export type ServiceItem = {
   deliverables: string;
 };
 
+
 export type BranchItem = {
   id: string;
   name: string;
@@ -34,7 +35,8 @@ export type PublishedContent = {
   branches: BranchItem[];
 };
 
-export const ADMIN_PASSWORD = 'smphotography';
+export const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@smphotography.com';
+export const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'change-this-password';
 export const ADMIN_LOGIN_KEY = 'sm_admin_logged_in';
 export const ADMIN_GALLERY_KEY = 'sm_admin_gallery_items';
 export const ADMIN_PACKAGES_KEY = 'sm_admin_packages';
@@ -70,15 +72,15 @@ export const defaultBranches: BranchItem[] = [
     address: 'Malgaon, Sangli District, Maharashtra, India',
     locationUrl: 'https://maps.app.goo.gl/AwgoQrcp92duJkoT6',
     description: 'Our original studio branch for weddings, portraits, films, and creative sessions.',
-    image: '',
+    image: '/images/Wedding (34).JPG',
   },
   {
     id: 'branch-2',
-    name: 'SM Photo Studio & Films - Miraj Sangli Miraj Kupwad',
-    address: 'SM Photo Studio & Films - Miraj Sangli Miraj Kupwad',
+    name: 'SM Photo Studio & Films - Miraj',
+    address: 'Miraj, Maharashtra, India',
     locationUrl: 'https://share.google/ZnDunM3nDt7smSKDr',
     description: 'Our second branch serving clients across Miraj, Sangli, and Miraj Kupwad.',
-    image: '',
+    image: '/images/Prewedding (23).jpg',
   },
 ];
 
@@ -177,7 +179,29 @@ export async function loadPublishedContent(): Promise<PublishedContent> {
   try {
     const response = await fetch('/api/content', { cache: 'no-store' });
     if (!response.ok) throw new Error('Content request failed');
-    return (await response.json()) as PublishedContent;
+    const content = (await response.json()) as PublishedContent;
+    const localGallery = getCustomGalleryItems();
+    const localPackages = getSavedContent<PackageItem[] | null>(ADMIN_PACKAGES_KEY, null);
+    const localServices = getSavedContent<ServiceItem[] | null>(ADMIN_SERVICES_KEY, null);
+    const galleryById = new Map([...localGallery, ...content.gallery].map((item) => [item.id, item]));
+
+    const savedPackages = localPackages || content.packages;
+    const packageMap = new Map(defaultPackages.map((item) => [item.name, item]));
+    savedPackages.forEach((item) => packageMap.set(item.name, item));
+    const branchMap = new Map(defaultBranches.map((item) => [item.id, item]));
+    content.branches.forEach((item) => branchMap.set(item.id, {
+      ...branchMap.get(item.id),
+      ...item,
+      image: item.image || branchMap.get(item.id)?.image || '',
+    }));
+
+    return {
+      ...content,
+      packages: [...packageMap.values()],
+      services: localServices || content.services,
+      gallery: [...galleryById.values()],
+      branches: [...branchMap.values()],
+    };
   } catch {
     return { packages: getPackages(), services: getServices(), gallery: getCustomGalleryItems(), branches: defaultBranches };
   }
