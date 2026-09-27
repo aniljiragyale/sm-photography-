@@ -39,6 +39,11 @@ export default function AdminPage() {
   const [packages, setPackages] = useState<PackageItem[]>(defaultPackages);
   const [services, setServices] = useState<ServiceItem[]>(defaultServices);
   const [branches, setBranches] = useState<BranchItem[]>(defaultBranches);
+  const [bannerImage, setBannerImage] = useState('');
+  const [isBannerUploading, setIsBannerUploading] = useState(false);
+  const [isBannerSaving, setIsBannerSaving] = useState(false);
+  const [isBranchesSaving, setIsBranchesSaving] = useState(false);
+  const [branchMessage, setBranchMessage] = useState('');
   const [message, setMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -52,6 +57,7 @@ export default function AdminPage() {
       setPackages(content.packages);
       setServices(content.services);
       setBranches(content.branches);
+      setBannerImage(content.bannerImage || '');
       setItems([...defaultGalleryItems, ...content.gallery]);
     });
     setIsReady(true);
@@ -126,6 +132,7 @@ export default function AdminPage() {
       services: validServices.map((item) => ({ ...item, title: item.title.trim(), description: item.description.trim(), deliverables: item.deliverables.trim() })),
       gallery: currentContent.gallery,
       branches,
+      bannerImage: bannerImage || currentContent.bannerImage || '/images/Prewedding (21).jpg',
     };
     const isPublished = await savePublishedContent(content, ADMIN_PASSWORD);
     setPackages(content.packages);
@@ -133,10 +140,94 @@ export default function AdminPage() {
     setMessage(isPublished ? 'Packages and services published successfully.' : 'Saved on this device. Connect Vercel shared storage to publish for everyone.');
   };
 
+  const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const data = new FormData();
+    data.append('file', file);
+    setIsBannerUploading(true);
+    setMessage('Uploading studio banner image...');
+    try {
+      const response = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: data });
+      const result = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        setMessage(result.error || 'Studio banner upload failed.');
+        return;
+      }
+      setBannerImage(result.url);
+      setMessage('Banner uploaded. Select Save banner to publish it.');
+    } catch {
+      setMessage('Studio banner upload failed. Check your connection and try again.');
+    } finally {
+      setIsBannerUploading(false);
+      input.value = '';
+    }
+  };
+
+  const saveBanner = async () => {
+    if (!bannerImage) {
+      setMessage('Upload a banner image before saving.');
+      return;
+    }
+
+    setIsBannerSaving(true);
+    setMessage('Saving studio banner...');
+    try {
+      const currentContent = await loadPublishedContent();
+      const isPublished = await savePublishedContent({ ...currentContent, bannerImage }, ADMIN_PASSWORD);
+      setMessage(isPublished ? 'Studio banner saved and published.' : 'Banner saved on this device, but could not be published for everyone.');
+    } catch {
+      setMessage('Studio banner could not be saved. Check your connection and try again.');
+    } finally {
+      setIsBannerSaving(false);
+    }
+  };
+
+  const handleBranchUpload = async (event: React.ChangeEvent<HTMLInputElement>, index: number, branchName: string) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const data = new FormData();
+    data.append('file', file);
+    setBranchMessage(`Uploading ${branchName} photo...`);
+    try {
+      const response = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: data });
+      const result = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        setBranchMessage(result.error || `${branchName} photo upload failed.`);
+        return;
+      }
+      setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, image: result.url || '' } : entry));
+      setBranchMessage(`${branchName} photo uploaded. Select Save branch images to publish both photos.`);
+    } catch {
+      setBranchMessage(`${branchName} photo upload failed. Check your connection and try again.`);
+    } finally {
+      input.value = '';
+    }
+  };
+
+  const saveBranchImages = async () => {
+    setIsBranchesSaving(true);
+    setBranchMessage('Saving studio branch images...');
+    try {
+      const currentContent = await loadPublishedContent();
+      const isPublished = await savePublishedContent({ ...currentContent, branches }, ADMIN_PASSWORD);
+      setBranchMessage(isPublished ? 'Both studio branch images have been saved.' : 'Branch images were saved on this device, but could not be published for everyone.');
+    } catch {
+      setBranchMessage('Studio branch images could not be saved. Check your connection and try again.');
+    } finally {
+      setIsBranchesSaving(false);
+    }
+  };
+
   const restoreContent = async () => {
     const isPublished = await resetPublishedContent(ADMIN_PASSWORD);
     setPackages(defaultPackages);
     setServices(defaultServices);
+    setBannerImage('');
     setMessage(isPublished ? 'Packages and services restored for everyone.' : 'Restored on this device. Connect Vercel shared storage to publish for everyone.');
   };
 
@@ -319,7 +410,33 @@ export default function AdminPage() {
               + Add another service
             </button>
 
-            <h3 className="admin-section-title">Studio branches</h3>
+            <h3 className="admin-section-title">Homepage banner image</h3>
+            <div className="content-editor-item">
+              {bannerImage ? (
+                <img className="banner-preview" src={bannerImage} alt="Current homepage banner preview" />
+              ) : (
+                <p className="form-note">No homepage banner selected yet.</p>
+              )}
+              <div className="upload-row">
+                <button type="button" className="btn btn-secondary upload-button" onClick={() => document.getElementById('banner-upload')?.click()} disabled={isBannerUploading || isBannerSaving}>
+                  {isBannerUploading ? 'Uploading...' : 'Upload homepage banner'}
+                </button>
+                <input id="banner-upload" type="file" accept="image/*" hidden onChange={handleBannerUpload} />
+                <button type="button" className="submit-btn" onClick={saveBanner} disabled={isBannerUploading || isBannerSaving}>
+                  {isBannerSaving ? 'Saving...' : 'Save banner'}
+                </button>
+              </div>
+              {message ? <p className="form-status" role="status">{message}</p> : null}
+            </div>
+
+            <h3 className="admin-section-title">Studio branch banner images</h3>
+            <p className="form-note">Upload one photo for each branch, then save both together. These photos appear on the About page.</p>
+            <div className="admin-actions">
+              <button type="button" className="submit-btn" onClick={saveBranchImages} disabled={isBranchesSaving}>
+                {isBranchesSaving ? 'Saving branch images...' : 'Save branch images'}
+              </button>
+            </div>
+            {branchMessage ? <p className="form-status" role="status">{branchMessage}</p> : null}
             <div className="content-editor-list">
               {branches.map((branch, index) => (
                 <div className="content-editor-item" key={branch.id}>
@@ -327,21 +444,12 @@ export default function AdminPage() {
                   <label>Address<input className="field" value={branch.address} onChange={(event) => setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, address: event.target.value } : entry))} /></label>
                   <label>Location link<input className="field" value={branch.locationUrl} onChange={(event) => setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, locationUrl: event.target.value } : entry))} /></label>
                   <label>Description<textarea className="field" rows={3} value={branch.description} onChange={(event) => setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, description: event.target.value } : entry))} /></label>
+                  {branch.image ? <img className="branch-admin-preview" src={branch.image} alt={`${branch.name} banner preview`} /> : <p className="form-note">No branch image selected.</p>}
                   <div className="upload-row">
-                    <button type="button" className="btn btn-secondary upload-button" onClick={() => document.getElementById(`branch-upload-${branch.id}`)?.click()}>Upload branch photo</button>
-                    <input id={`branch-upload-${branch.id}`} type="file" accept="image/*" hidden onChange={async (event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-                      const data = new FormData();
-                      data.append('file', file);
-                      setMessage(`Uploading ${branch.name} photo...`);
-                      const response = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: data });
-                      const result = (await response.json()) as { url?: string; error?: string };
-                      if (!response.ok || !result.url) { setMessage(result.error || 'Branch image upload failed.'); return; }
-                      setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, image: result.url || '' } : entry));
-                      setMessage('Branch photo uploaded. Save changes to publish it.');
-                    }} />
-                    {branch.image ? <span className="form-note">Photo ready to publish</span> : null}
+                    <button type="button" className="btn btn-secondary upload-button" onClick={() => document.getElementById(`branch-upload-${branch.id}`)?.click()}>
+                      Upload {branch.name} photo
+                    </button>
+                    <input id={`branch-upload-${branch.id}`} type="file" accept="image/*" hidden onChange={(event) => handleBranchUpload(event, index, branch.name)} />
                   </div>
                 </div>
               ))}

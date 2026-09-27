@@ -35,7 +35,6 @@ body {
   overflow-x: hidden;
   min-width: 0;
 }
-
 main,
 .page-shell,
 .section-block,
@@ -234,44 +233,63 @@ main {
 }
 
 .hero-section {
-  background: url('/images/Prewedding%20(21).jpg') center/cover no-repeat;
   min-height: 90vh;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10, 13, 12, 0.62), rgba(10, 13, 12, 0.34) 48%, rgba(10, 13, 12, 0.12));
+  pointer-events: none;
 }
 
 .hero-overlay {
-  width: 100%;
+  position: relative;
+  z-index: 1;
+  width: min(1280px, calc(100% - 28px));
   min-height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.42);
-  padding: 2rem 1.25rem;
+  padding: 2rem 0 3rem;
 }
 
 .hero-content {
-  max-width: 860px;
+  max-width: 760px;
   text-align: center;
-  padding: 2rem 1.5rem;
+  padding: 2rem 1rem;
   animation: hero-content-in 1s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.hero-content .eyebrow {
+  color: #f2c66d;
+  margin-bottom: 18px;
+}
+
 .hero-content h1 {
-  font-size: clamp(1.9rem, 4vw, 3.2rem);
-  line-height: 1.08;
-  color: var(--gold);
-  margin-bottom: 1rem;
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.34);
+  font-size: clamp(2.4rem, 5vw, 5rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+  color: #f7d78a;
+  text-transform: uppercase;
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 }
 
 .hero-content .lead {
+  margin: 24px auto 1.5rem;
   max-width: 680px;
-  margin: 0 auto 1.5rem;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(1rem, 1.7vw, 1.25rem);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.94);
 }
 
 .header-buttons {
@@ -1464,6 +1482,31 @@ textarea.form-field {
 .upload-button {
   min-width: 140px;
   height: 48px;
+}
+
+.banner-preview {
+  display: block;
+  width: min(100%, 720px);
+  max-height: 320px;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  object-position: center;
+  margin-bottom: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f3f4f0;
+}
+
+.branch-admin-preview {
+  display: block;
+  width: min(100%, 560px);
+  height: 190px;
+  margin: 0.25rem 0 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f3f4f0;
+  object-fit: cover;
+  object-position: center;
 }
 
 .grid-form label {

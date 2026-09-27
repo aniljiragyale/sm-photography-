@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_BANNER_IMAGE, loadPublishedContent } from '@/lib/admin-data';
 
 const galleryMoments = [
   {
@@ -98,6 +99,14 @@ export default function HomePage() {
   const [statsStarted, setStatsStarted] = useState(false);
   const [counts, setCounts] = useState(stats.map(() => 0));
 
+  const [bannerImage, setBannerImage] = useState(DEFAULT_BANNER_IMAGE);
+
+  useEffect(() => {
+    loadPublishedContent().then((content) => {
+      if (content.bannerImage) setBannerImage(content.bannerImage);
+    });
+  }, []);
+
   useEffect(() => {
     const element = statsRef.current;
     if (!element || typeof IntersectionObserver === 'undefined') {
@@ -136,7 +145,10 @@ export default function HomePage() {
 
   return (
     <>
-      <header className="hero-section">
+      <header
+        className="hero-section"
+        style={{ backgroundImage: `url("${encodeURI(bannerImage)}")` }}
+      >
         <div className="hero-overlay">
           <nav className="top-nav-mobile" aria-label="Main navigation" />
           <div className="hero-content">
@@ -147,15 +159,9 @@ export default function HomePage() {
               beauty become treasured memories.
             </p>
             <div className="header-buttons">
-              <Link href="/package" className="btn btn-primary">
-                Packages
-              </Link>
-              <Link href="/ourservices" className="btn btn-secondary">
-                Our Services
-              </Link>
-              <Link href="/booknow" className="btn btn-accent">
-                Book Now Session
-              </Link>
+              <Link href="/package" className="btn btn-primary">Packages</Link>
+              <Link href="/ourservices" className="btn btn-secondary">Our Services</Link>
+              <Link href="/booknow" className="btn btn-accent">Book Now Session</Link>
             </div>
           </div>
         </div>

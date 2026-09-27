@@ -33,7 +33,10 @@ export type PublishedContent = {
   services: ServiceItem[];
   gallery: GalleryItem[];
   branches: BranchItem[];
+  bannerImage?: string;
 };
+
+export const DEFAULT_BANNER_IMAGE = '/images/Prewedding (21).jpg';
 
 export const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@smphotography.com';
 export const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'change-this-password';
@@ -41,6 +44,7 @@ export const ADMIN_LOGIN_KEY = 'sm_admin_logged_in';
 export const ADMIN_GALLERY_KEY = 'sm_admin_gallery_items';
 export const ADMIN_PACKAGES_KEY = 'sm_admin_packages';
 export const ADMIN_SERVICES_KEY = 'sm_admin_services';
+export const ADMIN_BANNER_KEY = 'sm_admin_banner_image';
 
 export const galleryCategories = ['all', 'wedding', 'prewedding', 'engagement', 'maternity', 'candid', 'modeling'];
 
@@ -169,47 +173,73 @@ export function saveServices(services: ServiceItem[]): void {
   if (typeof window !== 'undefined') window.localStorage.setItem(ADMIN_SERVICES_KEY, JSON.stringify(services));
 }
 
+export function getBannerImage(): string {
+  if (typeof window === 'undefined') return DEFAULT_BANNER_IMAGE;
+  const saved = window.localStorage.getItem(ADMIN_BANNER_KEY);
+  return saved && saved.trim() ? saved : DEFAULT_BANNER_IMAGE;
+}
+
+export function saveBannerImage(image: string): void {
+  if (typeof window !== 'undefined') {
+    if (image && image.trim()) {
+      window.localStorage.setItem(ADMIN_BANNER_KEY, image.trim());
+      return;
+    }
+    window.localStorage.removeItem(ADMIN_BANNER_KEY);
+  }
+}
+
 export function resetContent(): void {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(ADMIN_PACKAGES_KEY);
   window.localStorage.removeItem(ADMIN_SERVICES_KEY);
+  window.localStorage.removeItem(ADMIN_BANNER_KEY);
 }
 
 export async function loadPublishedContent(): Promise<PublishedContent> {
   try {
     const response = await fetch('/api/content', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Content request failed');
-    const content = (await response.json()) as PublishedContent;
+    const content = response.ok ? ((await response.json()) as PublishedContent) : null;
     const localGallery = getCustomGalleryItems();
     const localPackages = getSavedContent<PackageItem[] | null>(ADMIN_PACKAGES_KEY, null);
     const localServices = getSavedContent<ServiceItem[] | null>(ADMIN_SERVICES_KEY, null);
-    const galleryById = new Map([...localGallery, ...content.gallery].map((item) => [item.id, item]));
+    const localBannerImage = getSavedContent<string | null>(ADMIN_BANNER_KEY, null);
+    const mergedContent = content || { packages: defaultPackages, services: defaultServices, gallery: [...defaultGalleryItems], branches: defaultBranches, bannerImage: DEFAULT_BANNER_IMAGE };
+    const galleryById = new Map([...localGallery, ...mergedContent.gallery].map((item) => [item.id, item]));
 
-    const savedPackages = localPackages || content.packages;
+    const savedPackages = localPackages || mergedContent.packages;
     const packageMap = new Map(defaultPackages.map((item) => [item.name, item]));
     savedPackages.forEach((item) => packageMap.set(item.name, item));
     const branchMap = new Map(defaultBranches.map((item) => [item.id, item]));
-    content.branches.forEach((item) => branchMap.set(item.id, {
+    mergedContent.branches.forEach((item) => branchMap.set(item.id, {
       ...branchMap.get(item.id),
       ...item,
       image: item.image || branchMap.get(item.id)?.image || '',
     }));
 
     return {
-      ...content,
+      ...mergedContent,
       packages: [...packageMap.values()],
-      services: localServices || content.services,
+      services: localServices || mergedContent.services,
       gallery: [...galleryById.values()],
       branches: [...branchMap.values()],
+      bannerImage: localBannerImage || mergedContent.bannerImage || DEFAULT_BANNER_IMAGE,
     };
   } catch {
-    return { packages: getPackages(), services: getServices(), gallery: getCustomGalleryItems(), branches: defaultBranches };
+    return {
+      packages: getPackages(),
+      services: getServices(),
+      gallery: getCustomGalleryItems(),
+      branches: defaultBranches,
+      bannerImage: getBannerImage(),
+    };
   }
 }
 
 export async function savePublishedContent(content: PublishedContent, password: string): Promise<boolean> {
   savePackages(content.packages);
   saveServices(content.services);
+  saveBannerImage(content.bannerImage || DEFAULT_BANNER_IMAGE);
 
   try {
     const response = await fetch('/api/content', {
