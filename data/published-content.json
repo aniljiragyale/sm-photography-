@@ -1,0 +1,142 @@
+{
+  "packages": [
+    {
+      "name": "Silver Package",
+      "price": "₹30,000",
+      "items": [
+        "Traditional Photographer",
+        "Traditional Videographer",
+        "20-Page Photobook Album",
+        "Video Editing and Reels",
+        "12x36 NT HD Photobook Album"
+      ]
+    },
+    {
+      "name": "Gold Package",
+      "price": "₹50,000",
+      "items": [
+        "Traditional Photographer",
+        "Traditional Videographer",
+        "Candid Photographer",
+        "25-Page Photobook Album",
+        "Video Editing with Highlights + Reel",
+        "12x36 NT HD Photobook Album"
+      ]
+    },
+    {
+      "name": "Diamond Package",
+      "price": "₹70,000",
+      "items": [
+        "Traditional Photographer",
+        "Traditional Videographer",
+        "Candid Photographer",
+        "Cinematic Videographer",
+        "30-Page Photobook Album",
+        "Video Editing with Highlights Reel",
+        "Unlimited Photos",
+        "12x36 NT HD Photobook Album"
+      ]
+    },
+    {
+      "name": "Pre-Wedding Package",
+      "price": "₹45,000",
+      "items": [
+        "Candid Photography",
+        "Cinematic Videography + Drone",
+        "Teaser Video + Reel + Highlight (4K / Full HD Video)"
+      ]
+    },
+    {
+      "name": "Maternity Package",
+      "price": "₹10,000",
+      "items": [
+        "1 Day Rate",
+        "Candid Photography (25-30 Edited Photos + All RAW Soft Copy + Reel)"
+      ]
+    },
+    {
+      "name": "Terms & Conditions",
+      "price": "Flexible",
+      "items": [
+        "75% payment in advance",
+        "Transportation and location charges separately",
+        "Stay and dinner managed by clients"
+      ]
+    }
+  ],
+  "services": [
+    {
+      "title": "Wedding Shoot",
+      "description": "A complete visual story of your wedding, from preparations and rituals to the reception. We balance candid emotion, family portraits, couple direction, and detail photography.",
+      "deliverables": "Candid coverage, family portraits, couple portraits, rituals, edited gallery, and album-ready selections."
+    },
+    {
+      "title": "Pre-Wedding Shoot",
+      "description": "Relaxed, location-based sessions built around your chemistry and personality. We help with concepts, styling, locations, and natural posing.",
+      "deliverables": "Concept planning, location guidance, edited portraits, cinematic frames, and social-media reels."
+    },
+    {
+      "title": "Cinematic Videography",
+      "description": "Story-led wedding and event films with thoughtful camera movement, clean sound, emotional pacing, and polished editing.",
+      "deliverables": "Teaser film, highlight edit, full-event coverage options, reels, and music-synced storytelling."
+    },
+    {
+      "title": "Maternity Photography",
+      "description": "Gentle portraits that celebrate pregnancy with soft light, comfortable direction, and intimate family moments.",
+      "deliverables": "Wardrobe guidance, location or home session, individual portraits, couple portraits, and edited keepsakes."
+    },
+    {
+      "title": "Outdoor Sessions",
+      "description": "Natural-light portraits designed around golden hour, meaningful locations, scenic backdrops, and an easy-going experience.",
+      "deliverables": "Location planning, creative direction, natural posing, edited gallery, and print-ready images."
+    },
+    {
+      "title": "Event Coverage",
+      "description": "Reliable coverage for birthdays, engagements, anniversaries, cultural celebrations, and corporate gatherings.",
+      "deliverables": "Guest moments, decor and details, group portraits, candid reactions, and a curated final gallery."
+    },
+    {
+      "title": "Candid Photography",
+      "description": "Unobtrusive photography focused on genuine expressions, laughter, tears, movement, and the moments people often miss.",
+      "deliverables": "Natural storytelling, reaction photography, candid portraits, and carefully edited high-resolution images."
+    },
+    {
+      "title": "Modeling Portfolios",
+      "description": "Portfolio sessions that present your personality and range with clear direction, considered lighting, and strong visual framing.",
+      "deliverables": "Mood-board planning, pose direction, outfit guidance, editorial portraits, and portfolio-ready selects."
+    },
+    {
+      "title": "Drone Shoot",
+      "description": "Aerial photography and video that add scale and cinematic perspective to venues, outdoor celebrations, properties, and destinations.",
+      "deliverables": "Aerial establishing shots, venue perspectives, cinematic clips, and coordinated ground-and-air storytelling."
+    }
+  ],
+  "gallery": [
+    {
+      "id": "candid-1790486882979",
+      "title": "A Moment Before Forever",
+      "category": "candid",
+      "image": "/uploads/1790486868776-IMG_6519.JPG.jpeg",
+      "description": "A Beautiful Moment Before Forever 💍🌿"
+    }
+  ],
+  "branches": [
+    {
+      "id": "branch-1",
+      "name": "SM Photo Studio & Films - Malgaon",
+      "address": "Malgaon, Sangli District, Maharashtra, India",
+      "locationUrl": "https://maps.app.goo.gl/AwgoQrcp92duJkoT6",
+      "description": "Our original studio branch for weddings, portraits, films, and creative sessions.",
+      "image": "/images/Wedding (34).JPG"
+    },
+    {
+      "id": "branch-2",
+      "name": "SM Photo Studio & Films - Miraj",
+      "address": "Miraj, Maharashtra, India",
+      "locationUrl": "https://share.google/ZnDunM3nDt7smSKDr",
+      "description": "Our second branch serving clients across Miraj, Sangli, and Miraj Kupwad.",
+      "image": "/images/Prewedding (23).jpg"
+    }
+  ],
+  "bannerImage": "/images/Prewedding (21).jpg"
+}

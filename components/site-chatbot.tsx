@@ -11,6 +11,7 @@ type SiteContent = {
 
 type ReplyLink = { label: string; href: string };
 type ChatLanguage = 'en' | 'hi' | 'mr';
+type ChatIntent = 'packages' | 'owner' | 'services' | 'contact';
 type ChatMessage = {
   id: number;
   role: 'assistant' | 'visitor';
@@ -255,7 +256,7 @@ function playReplyTone(audioContext: AudioContext | null) {
   });
 }
 
-function makeReply(question: string, content: SiteContent | null, language: ChatLanguage): Omit<ChatMessage, 'id' | 'role'> {
+function makeReply(question: string, content: SiteContent | null, language: ChatLanguage, intent?: ChatIntent): Omit<ChatMessage, 'id' | 'role'> {
   const normalized = normalizeText(question);
   const copy = chatCopy[language];
   const packages = (content?.packages || []).filter((item) => !item.name.toLowerCase().includes('terms'));
@@ -265,10 +266,13 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
     const localizedName = normalizeText(localizePackageName(item.name, language));
     return normalized.includes(packageName) || (shortName.length > 2 && normalized.includes(shortName)) || normalized.includes(localizedName);
   });
-  const asksAboutPackages = /package|price|pricing|cost|budget|rate|how much|charge|fee|पैकेज|कीमत|मूल्य|दर|कितना|कितनी|किंमत|किती|रेट/.test(normalized);
-  const asksAboutOwner = /who.*(sm|studio|photographer)|sm.*who|who is|owner|founder|satish|molekar|about (sm|studio|him|satish)|experience|experienced|background|career|how long|years|photographer/.test(normalized)
-    || ['सतीश', 'मोलेकर', 'मोळेकर', 'मालक', 'मालकी', 'संस्थापक', 'अनुभव', 'अनुभवी', 'स्टुडिओ', 'माहिती', 'कोण', 'कौन'].some((term) => normalized.includes(term))
-    || ((normalized.includes('sm') || normalized.includes('एसएम')) && (normalized.includes('कोण') || normalized.includes('कौन') || normalized.includes('मालक') || normalized.includes('about')));
+  const asksAboutPackages = intent === 'packages'
+    || /package|price|pricing|cost|budget|rate|how much|charge|fee|पैकेज|पॅकेज|कीमत|मूल्य|दर|कितना|कितनी|किंमत|किती|रेट/.test(normalized)
+    || ['पैकेज', 'पॅकेज', 'किंमत', 'किती', 'कितना', 'कीमत'].some((term) => question.includes(term));
+  const asksAboutOwner = intent === 'owner'
+    || /who.*(sm|studio|photographer)|sm.*who|who is|owner|founder|satish|molekar|about (sm|studio|him|satish)|experience|experienced|background|career|how long|years|photographer/.test(normalized)
+    || ['सतीश', 'मोलेकर', 'मोळेकर', 'मालक', 'मालकी', 'संस्थापक', 'अनुभव', 'अनुभवी'].some((term) => question.includes(term))
+    || ((normalized.includes('sm') || normalized.includes('एसएम')) && (question.includes('कोण') || question.includes('कौन') || question.includes('मालक') || normalized.includes('about')));
 
   if (/^(hi+|hello|hey|namaste|good morning|good afternoon|good evening)(?:\s|$)/.test(normalized) || /^(नमस्ते|नमस्कार|हाय|हॅलो)(?:\s|$)/.test(normalized)) {
     return {
@@ -332,7 +336,7 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
     };
   }
 
-  if (/service|services|shoot|photograph|videograph|event|wedding|engagement|portrait|drone|सेवा|शूट|शादी|विवाह|लग्न|छायाचित्र|फोटोग्राफी|कार्यक्रम/.test(normalized)) {
+  if (intent === 'services' || /service|services|shoot|photograph|videograph|event|wedding|engagement|portrait|drone|सेवा|सेवाएँ|सेवाएं|शूट|शादी|विवाह|लग्न|छायाचित्र|फोटोग्राफी|कार्यक्रम/.test(normalized) || question.includes('सेव')) {
     const serviceList = (content?.services || []).map((item) => {
       const serviceName = servicesByName[normalizeText(item.title)];
       return serviceName?.names[language] || item.title;
@@ -366,7 +370,7 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
     };
   }
 
-  if (/contact|phone|call|whatsapp|email|reach|संपर्क|फोन|कॉल|ईमेल/.test(normalized)) {
+  if (intent === 'contact' || /contact|phone|call|whatsapp|email|reach|संपर्क|फोन|कॉल|ईमेल/.test(normalized) || question.includes('संपर्क')) {
     return {
       text: copy.contact,
       links: [{ label: copy.call, href: 'tel:+919511835507' }, { label: 'WhatsApp', href: whatsappLink('Hello SM Photography & Films, I have a question about your photography services.') }, { label: copy.contactLink, href: '/contact' }],
@@ -432,12 +436,12 @@ export function SiteChatbot() {
     if (replyTimerRef.current !== null) window.clearTimeout(replyTimerRef.current);
   }, []);
 
-  const sendMessage = (value: string) => {
+  const sendMessage = (value: string, intent?: ChatIntent) => {
     const question = value.trim();
     if (!question || isTyping) return;
 
     const visitorMessage: ChatMessage = { id: nextId.current++, role: 'visitor', text: question };
-    const reply: ChatMessage = { id: nextId.current++, role: 'assistant', ...makeReply(question, content, language) };
+    const reply: ChatMessage = { id: nextId.current++, role: 'assistant', ...makeReply(question, content, language, intent) };
     if (typeof window !== 'undefined' && 'AudioContext' in window) {
       audioContextRef.current ??= new window.AudioContext();
       void audioContextRef.current.resume().catch(() => undefined);
@@ -503,9 +507,10 @@ export function SiteChatbot() {
           </div>
 
           <div className="chatbot-prompts" aria-label={copy.suggestions}>
-            {[copy.packagesPrompt, copy.experiencePrompt, copy.servicesPrompt, copy.contactPrompt].map((prompt) => (
-              <button key={prompt} type="button" onClick={() => sendMessage(prompt)}>{prompt}</button>
-            ))}
+            <button type="button" onClick={() => sendMessage(copy.packagesPrompt, 'packages')}>{copy.packagesPrompt}</button>
+            <button type="button" onClick={() => sendMessage(copy.experiencePrompt, 'owner')}>{copy.experiencePrompt}</button>
+            <button type="button" onClick={() => sendMessage(copy.servicesPrompt, 'services')}>{copy.servicesPrompt}</button>
+            <button type="button" onClick={() => sendMessage(copy.contactPrompt, 'contact')}>{copy.contactPrompt}</button>
           </div>
 
           <form className="chatbot-compose" onSubmit={handleSubmit}>
