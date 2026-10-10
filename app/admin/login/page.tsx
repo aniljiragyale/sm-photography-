@@ -3,24 +3,39 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ADMIN_EMAIL, ADMIN_PASSWORD, setAdminLoggedIn } from '@/lib/admin-data';
+import { ADMIN_EMAIL, setAdminLoggedIn } from '@/lib/admin-data';
+import { setBackendToken } from '@/lib/backend';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState(ADMIN_EMAIL);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (email.trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase() || password.trim() !== ADMIN_PASSWORD) {
-      setError('Incorrect password. Please try again.');
-      return;
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.token) {
+        setError(result.error || 'Invalid admin credentials.');
+        return;
+      }
+      setBackendToken(result.token);
+      setAdminLoggedIn(true);
+      router.push('/admin');
+    } catch {
+      setError('The admin backend is unavailable. Start the backend server and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setAdminLoggedIn(true);
-    router.push('/admin');
   };
 
   return (
@@ -53,12 +68,13 @@ export default function AdminLoginPage() {
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Enter admin password"
             autoComplete="current-password"
+            required
           />
 
           {error ? <p className="form-status error-status">{error}</p> : null}
 
           <div className="admin-actions">
-            <button type="submit" className="submit-btn">Login</button>
+            <button type="submit" className="submit-btn" disabled={isSubmitting}>{isSubmitting ? 'Signing in…' : 'Login'}</button>
             <Link href="/" className="page-back">
               Back to home
             </Link>

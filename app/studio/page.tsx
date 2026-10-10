@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAdminLoggedIn, setAdminLoggedIn } from '@/lib/admin-data';
-import { getBackendToken } from '@/lib/backend';
+import { clearBackendToken, getBackendToken } from '@/lib/backend';
 
 type EventSummary = { id: number; status: string; photo_count: number; selection_count: number };
 
@@ -43,7 +43,7 @@ export default function StudioDashboardPage() {
           <p className="eyebrow">Studio dashboard</p>
           <h1>SM Photography Studio</h1>
         </div>
-        <button type="button" className="btn btn-secondary" onClick={() => { setAdminLoggedIn(false); router.push('/'); }}>
+        <button type="button" className="btn btn-secondary" onClick={() => { clearBackendToken(); setAdminLoggedIn(false); router.push('/'); }}>
           Logout
         </button>
       </div>
@@ -61,6 +61,7 @@ export default function StudioDashboardPage() {
             <div className="admin-actions">
               <a className="btn btn-secondary" href="/studio/events">View Saved Events</a>
               <a className="submit-btn" href="/studio/events/new">Create Event</a>
+              <a className="btn btn-secondary" href="/studio/offers">Manage Offers</a>
             </div>
           </div>
 

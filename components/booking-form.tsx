@@ -5,8 +5,13 @@ import { getEmailErrorMessage, sendBookingEmail } from '@/lib/email';
 
 export function BookingForm() {
   const [status, setStatus] = useState('');
-  const [eventType, setEventType] = useState('');
-  const [packageTier, setPackageTier] = useState('');
+  const [bookingContext] = useState(() => {
+    if (typeof window === 'undefined') return { eventType: '', packageTier: '', offer: '' };
+    const query = new URLSearchParams(window.location.search);
+    return { eventType: query.get('eventType') || '', packageTier: query.get('package') || '', offer: query.get('offer') || '' };
+  });
+  const [eventType, setEventType] = useState(bookingContext.eventType);
+  const [packageTier, setPackageTier] = useState(bookingContext.packageTier);
   const [referral, setReferral] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -32,6 +37,7 @@ export function BookingForm() {
 
   return (
     <form className="form-grid" onSubmit={handleSubmit}>
+      {bookingContext.offer && <input type="hidden" name="offer" value={bookingContext.offer} />}
       <div className="form-row">
         <input className="field" type="text" name="first_name" placeholder="First Name" required />
         <input className="field" type="text" name="last_name" placeholder="Last Name" required />
@@ -54,6 +60,7 @@ export function BookingForm() {
           <option>Wedding</option>
           <option>Pre-Wedding</option>
           <option>Maternity</option>
+          <option>Baby Shoot</option>
           <option>Birthday</option>
           <option>Corporate</option>
           <option>Other</option>
@@ -76,6 +83,9 @@ export function BookingForm() {
           <option>Silver</option>
           <option>Gold</option>
           <option>Diamond</option>
+          <option>Pre-Wedding</option>
+          <option>Maternity</option>
+          <option>Baby Shoot</option>
           <option>Other</option>
         </select>
 

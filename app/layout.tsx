@@ -6,6 +6,7 @@ import { SiteChatbot } from '@/components/site-chatbot';
 import { SiteThemeProvider } from '@/components/site-theme-provider';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.smphotography.co.in'),
   title: 'SM Photography and Films',
   description: 'Photography portfolio and wedding film studio in Sangli, Maharashtra.',
   icons: {

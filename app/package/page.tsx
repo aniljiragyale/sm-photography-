@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { defaultPackages, loadPublishedContent, type PackageItem } from '@/lib/admin-data';
+import { OffersGrid } from '@/components/offers-grid';
 
 const WHATSAPP_NUMBER = '919511835507';
 
@@ -37,7 +38,7 @@ export default function PackagePage() {
 
       <div className="page-content">
         <div className="package-grid">
-          {packages.map((pkg, index) => {
+          {packages.filter((pkg) => !pkg.name.toLowerCase().includes('maternity')).map((pkg, index) => {
             const variant = getPackageVariant(pkg.name);
             const message = encodeURIComponent(`Hi, I am interested in the ${pkg.name} package. Please share the pricing and more details.`);
 
@@ -52,7 +53,7 @@ export default function PackagePage() {
                   {variant === 'gold' && <span className="package-highlight package-highlight-gold">Most Popular</span>}
                   {variant === 'diamond' && <span className="package-highlight package-highlight-diamond">Luxury</span>}
                 </div>
-                <div className="price">Contact us for pricing</div>
+                {variant !== 'maternity' && <div className="price">Contact us for pricing</div>}
                 <ul>
                   {pkg.items.map((item) => (
                     <li key={item}>{item}</li>
@@ -71,6 +72,8 @@ export default function PackagePage() {
             );
           })}
         </div>
+
+        <OffersGrid />
 
         <section className="customisation-banner" aria-label="Custom photography packages">
           <p className="eyebrow">Made for your story</p>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useSiteTheme } from '@/components/site-theme-provider';
+import { SiteOfferBadge } from '@/components/site-offer-badge';
 
 const navItems = [
   { href: '/gallery', label: 'Gallery' },
@@ -18,6 +19,9 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
+      <div className="header-firework header-firework--one" aria-hidden="true" />
+      <div className="header-firework header-firework--two" aria-hidden="true" />
+      <div className="header-firework header-firework--three" aria-hidden="true" />
       <div className="site-header-inner">
         <Link href="/" className="brand" aria-label="SM Photography home">
           <span className="brand-mark">
@@ -50,6 +54,8 @@ export function SiteHeader() {
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.2A8.2 8.2 0 0 1 8.8 3.8 8.4 8.4 0 1 0 20.2 15.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>
             )}
           </button>
+
+          <SiteOfferBadge markerOnly />
 
           <nav aria-label="Main navigation">
             <ul className={`top-nav ${isOpen ? 'is-open' : ''}`}>

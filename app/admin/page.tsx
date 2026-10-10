@@ -23,6 +23,7 @@ import {
   type ServiceItem,
   type BranchItem,
 } from '@/lib/admin-data';
+import { clearBackendToken } from '@/lib/backend';
 
 const initialForm = {
   title: '',
@@ -119,6 +120,7 @@ export default function AdminPage() {
   };
 
   const logout = () => {
+    clearBackendToken();
     setAdminLoggedIn(false);
     router.push('/');
   };
@@ -251,6 +253,13 @@ export default function AdminPage() {
       </div>
 
       <div className="page-content admin-panel">
+        <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
+          <h2>Offers &amp; promotions</h2>
+          <p>Create and publish homepage offers, upload promotional images, set dates, and copy shareable offer links.</p>
+          <div className="admin-actions">
+            <Link href="/studio/offers" className="submit-btn">Manage Offers</Link>
+          </div>
+        </section>
         <div className="admin-layout">
           <section className="admin-card">
             <h2>Add a new photo</h2>

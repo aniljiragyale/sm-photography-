@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_BANNER_IMAGE, loadPublishedContent } from '@/lib/admin-data';
+import { HomeOfferPopup } from '@/components/home-offer-popup';
+import { SiteOfferBadge } from '@/components/site-offer-badge';
 
 const galleryMoments = [
   {
@@ -149,6 +151,7 @@ export default function HomePage() {
         className="hero-section"
         style={{ backgroundImage: `url("${encodeURI(bannerImage)}")` }}
       >
+        <SiteOfferBadge className="hero-offer-badge" />
         <div className="hero-overlay">
           <nav className="top-nav-mobile" aria-label="Main navigation" />
           <div className="hero-content">
@@ -161,11 +164,13 @@ export default function HomePage() {
             <div className="header-buttons">
               <Link href="/package" className="btn btn-primary">Packages</Link>
               <Link href="/ourservices" className="btn btn-secondary">Our Services</Link>
-              <Link href="/booknow" className="btn btn-accent">Book Now Session</Link>
+              <Link href="/booknow" className="btn btn-accent">Book Your Session</Link>
             </div>
           </div>
         </div>
       </header>
+
+      <HomeOfferPopup />
 
       <section ref={statsRef} className="stats-strip" aria-label="Business stats">
         {stats.map((item, index) => (

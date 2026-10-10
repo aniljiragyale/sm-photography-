@@ -30,6 +30,12 @@ Connect a Vercel Blob store to the same project so Vercel provides:
 
 After connecting both integrations, redeploy the `master` branch. Gallery and branch photos are uploaded to Blob, while their published records are stored in Redis.
 
+### Manage offers
+
+Sign in at `/studio-login`, then open **Manage Offers** in the studio dashboard (or visit `/studio/offers`). Offers are stored in the same Upstash Redis database; uploaded offer images use Vercel Blob. In local development, offer records fall back to `data/offers.json` and images to `public/uploads`.
+
+The homepage's **Admin Login** and `/studio-login` both authenticate through the Next.js `/api/admin/login` route. Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a long random `JWT_SECRET` as server-side environment variables in `.env.local` for development and in Vercel for deployment. Change the sample admin password before production use. Offer records are stored in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured; local development falls back to `data/offers.json`. Vercel requires Redis because serverless local files do not persist. Offer images use Vercel Blob in production, so also configure `BLOB_READ_WRITE_TOKEN`.
+
 ## Project Structure
 
 - **HTML** – Semantic markup for a well-structured layout
