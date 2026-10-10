@@ -234,16 +234,22 @@ export default function HomePage() {
           <div className="section-heading">
             <p className="eyebrow">What we do best</p>
             <h2>Signature Services</h2>
+            <p className="signature-services-intro">Considered photography and film for celebrations, milestones, and the people who make them matter.</p>
           </div>
-          <div className="services-grid">
+          <div className="signature-services-grid">
             {services.map((service, index) => (
-              <div key={service} className="service-card animated-card" style={{ animationDelay: `${index * 75}ms` }}>
+              <article key={service} className="signature-service-item animated-card" style={{ animationDelay: `${index * 75}ms` }}>
+                <span className="signature-service-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
                 <h3>{service}</h3>
                 <p>
                   Crafted with artistic direction, thoughtful planning, and professional execution to turn your vision into timeless imagery.
                 </p>
-              </div>
+              </article>
             ))}
+          </div>
+          <div className="signature-services-footer">
+            <p>Made for your moment, never one-size-fits-all.</p>
+            <Link href="/ourservices" className="signature-services-link">Explore all services <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { EnquiryForm } from '@/components/enquiry-form';
 
+const WHATSAPP_NUMBER = '919511835507';
+const WHATSAPP_MESSAGE = encodeURIComponent(
+  'Hello SM Photography & Films, I would like to enquire about a photography session. Service or event: ____. Preferred date: ____. Please share availability and package details.'
+);
+
 export default function PortfolioPage() {
   return (
     <div className="page-shell">
@@ -56,8 +61,8 @@ export default function PortfolioPage() {
             <a className="btn btn-primary" href="tel:+919511835507">
               Call SM Photography
             </a>
-            <a className="btn btn-secondary" href="https://api.whatsapp.com/send?phone=919511835507" target="_blank" rel="noreferrer">
-              Chat on WhatsApp
+            <a className="btn btn-secondary" href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`} target="_blank" rel="noopener noreferrer">
+              Enquire on WhatsApp
             </a>
           </div>
         </section>

@@ -2,6 +2,8 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
+import { SiteChatbot } from '@/components/site-chatbot';
+import { SiteThemeProvider } from '@/components/site-theme-provider';
 
 export const metadata: Metadata = {
   title: 'SM Photography and Films',
@@ -22,9 +24,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <SiteThemeProvider>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteChatbot />
+          <SiteFooter />
+        </SiteThemeProvider>
       </body>
     </html>
   );
