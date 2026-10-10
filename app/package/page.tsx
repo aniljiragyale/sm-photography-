@@ -4,6 +4,20 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { defaultPackages, loadPublishedContent, type PackageItem } from '@/lib/admin-data';
 
+const WHATSAPP_NUMBER = '919511835507';
+
+function getPackageVariant(name: string) {
+  const normalizedName = name.toLowerCase();
+
+  if (normalizedName.includes('gold')) return 'gold';
+  if (normalizedName.includes('diamond')) return 'diamond';
+  if (normalizedName.includes('silver')) return 'silver';
+  if (normalizedName.includes('pre-wedding') || normalizedName.includes('prewedding')) return 'prewedding';
+  if (normalizedName.includes('maternity')) return 'maternity';
+
+  return 'default';
+}
+
 export default function PackagePage() {
   const [packages, setPackages] = useState<PackageItem[]>(defaultPackages);
 
@@ -23,17 +37,39 @@ export default function PackagePage() {
 
       <div className="page-content">
         <div className="package-grid">
-          {packages.map((pkg, index) => (
-            <div key={pkg.name} className="package-card animated-card" style={{ animationDelay: `${index * 100}ms` }}>
-              <span className="package-badge">{pkg.name}</span>
-              <div className="price">Contact us for pricing</div>
-              <ul>
-                {pkg.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {packages.map((pkg, index) => {
+            const variant = getPackageVariant(pkg.name);
+            const message = encodeURIComponent(`Hi, I am interested in the ${pkg.name} package. Please share the pricing and more details.`);
+
+            return (
+              <div
+                key={pkg.name}
+                className={`package-card animated-card package-card--${variant}`}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="package-card-header">
+                  <span className="package-badge">{pkg.name}</span>
+                  {variant === 'gold' && <span className="package-highlight package-highlight-gold">Most Popular</span>}
+                  {variant === 'diamond' && <span className="package-highlight package-highlight-diamond">Luxury</span>}
+                </div>
+                <div className="price">Contact us for pricing</div>
+                <ul>
+                  {pkg.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <a
+                  className="whatsapp-btn"
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Enquire on WhatsApp for ${pkg.name}`}
+                >
+                  Enquire Now on WhatsApp
+                </a>
+              </div>
+            );
+          })}
         </div>
 
         <section className="customisation-banner" aria-label="Custom photography packages">
