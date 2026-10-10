@@ -3099,9 +3099,9 @@ select:focus {
 @media (max-width: 768px) {
   .chatbot-panel {
     position: fixed;
-    top: max(8px, env(safe-area-inset-top));
+    top: max(5svh, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
-    bottom: max(8px, env(safe-area-inset-bottom));
+    bottom: max(5svh, env(safe-area-inset-bottom));
     left: max(8px, env(safe-area-inset-left));
     width: auto;
     height: auto;
