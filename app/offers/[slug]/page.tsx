@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const description = `${offer.description} ${formatOfferDiscount(offer)} on ${offer.packages.join(', ')}.`;
   return {
     title: `${offer.title} | SM Photography`, description,
-    openGraph: { title: offer.title, description, type: 'website', images: offer.image ? [offer.image] : [] },
-    twitter: { card: 'summary_large_image', title: offer.title, description, images: offer.image ? [offer.image] : [] },
+    openGraph: { title: offer.title, description, type: 'website', images: [{ url: '/images/sm-photography-social.png', width: 1200, height: 1000, alt: 'SM Photography logo' }] },
+    twitter: { card: 'summary_large_image', title: offer.title, description, images: [{ url: '/images/sm-photography-social.png', alt: 'SM Photography logo' }] },
   };
 }
 

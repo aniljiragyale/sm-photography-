@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const password = process.env.ADMIN_PASSWORD;
   const secret = process.env.JWT_SECRET;
   if (!email || !password || !secret) {
-    return NextResponse.json({ error: 'Admin login is not configured on the server.' }, { status: 503 });
+    return NextResponse.json({ error: 'Admin login is not configured for this deployment. Set ADMIN_EMAIL, ADMIN_PASSWORD, and JWT_SECRET in the hosting project’s server environment, then redeploy.' }, { status: 503 });
   }
 
   try {

@@ -86,6 +86,7 @@ export function BookingForm() {
           <option>Pre-Wedding</option>
           <option>Maternity</option>
           <option>Baby Shoot</option>
+          {bookingContext.packageTier && !['Silver', 'Gold', 'Diamond', 'Pre-Wedding', 'Maternity', 'Baby Shoot', 'Other'].includes(bookingContext.packageTier) && <option value={bookingContext.packageTier}>{bookingContext.packageTier}</option>}
           <option>Other</option>
         </select>
 

@@ -10,7 +10,17 @@ export const metadata: Metadata = {
   title: 'SM Photography and Films',
   description: 'Photography portfolio and wedding film studio in Sangli, Maharashtra.',
   icons: {
-    icon: '/images/Flower.jpg',
+    icon: '/images/sm-photography-social.png',
+  },
+  openGraph: {
+    title: 'SM Photography and Films',
+    description: 'Photography portfolio and wedding film studio in Sangli, Maharashtra.',
+    type: 'website',
+    images: [{ url: '/images/sm-photography-social.png', width: 1200, height: 1000, alt: 'SM Photography logo' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: [{ url: '/images/sm-photography-social.png', alt: 'SM Photography logo' }],
   },
 };
 

@@ -6,7 +6,11 @@ const WHATSAPP_MESSAGE = encodeURIComponent(
   'Hello SM Photography & Films, I would like to check availability for a photography session. Event or session: ____. Preferred date: ____. Name: ____.'
 );
 
-export default function BookNowPage() {
+export default function BookNowPage({ searchParams }: { searchParams: { package?: string; offer?: string } }) {
+  const selectedPackage = searchParams.package?.trim();
+  const whatsappMessage = encodeURIComponent(
+    `Hello SM Photography & Films, I would like to check availability for a photography session${selectedPackage ? ` with the ${selectedPackage} package` : ''}${searchParams.offer ? ` for ${searchParams.offer}` : ''}. Event or session: ____. Preferred date: ____. Name: ____.`
+  );
   return (
     <div className="page-shell booking-page">
       <div className="page-header booking-page-header">
@@ -25,7 +29,7 @@ export default function BookNowPage() {
           <p>Wedding celebrations, pre-wedding stories, maternity portraits, and meaningful days with your family, photographed with care.</p>
           <div className="booking-story-divider" />
           <a href="tel:+919511835507" className="booking-contact-link">Call <span>+91 95118 35507</span></a>
-          <a className="booking-whatsapp-link" href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`} target="_blank" rel="noopener noreferrer">
+          <a className="booking-whatsapp-link" href={`https://wa.me/${WHATSAPP_NUMBER}?text=${selectedPackage || searchParams.offer ? whatsappMessage : WHATSAPP_MESSAGE}`} target="_blank" rel="noopener noreferrer">
             <span>Prefer WhatsApp?</span>
             <strong>Start a conversation <span aria-hidden="true">↗</span></strong>
           </a>
