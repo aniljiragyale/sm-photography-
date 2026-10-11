@@ -20,7 +20,7 @@ export default function ServicesPage() {
     <div className="page-shell services-page">
       <div className="page-header services-page-header">
         <div className="page-actions page-actions-top">
-          <Link href="/" className="page-back">← Back</Link>
+          <Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home"><span aria-hidden="true">←</span></Link>
         </div>
         <p className="eyebrow">Creative studio services</p>
         <h1>Our Services</h1>

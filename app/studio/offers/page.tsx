@@ -117,7 +117,7 @@ export default function StudioOffersPage() {
 
   return (
     <div className="page-shell">
-      <div className="page-header admin-header-row"><div><p className="eyebrow">Studio dashboard</p><h1>Offers &amp; promotions</h1></div><Link href="/studio" className="btn btn-secondary">Back to studio</Link></div>
+      <div className="page-header admin-header-row"><div><p className="eyebrow">Studio dashboard</p><h1>Offers &amp; promotions</h1></div><Link href="/studio" className="page-back back-icon" aria-label="Back to studio" title="Back to studio"><span aria-hidden="true">←</span></Link></div>
       <div className="page-content offers-admin-layout">
         <section className="admin-card"><h2>Saved offers</h2>{loading ? <p>Loading offers…</p> : offers.length === 0 ? <p className="form-note">No offers yet. Create your first offer using the form.</p> : (
           <div className="offers-admin-list">{offers.map((offer) => {

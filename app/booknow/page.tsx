@@ -15,7 +15,7 @@ export default function BookNowPage({ searchParams }: { searchParams: { package?
     <div className="page-shell booking-page">
       <div className="page-header booking-page-header">
         <div className="page-actions page-actions-top">
-          <Link href="/" className="page-back">← Back</Link>
+          <Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home"><span aria-hidden="true">←</span></Link>
         </div>
         <p className="eyebrow">Reserve your date</p>
         <h1>Book Your Photography Session</h1>

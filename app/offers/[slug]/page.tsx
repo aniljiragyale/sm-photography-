@@ -23,7 +23,7 @@ export default async function OfferPage({ params }: { params: { slug: string } }
   if (!offer || !offerIsLive(offer)) notFound();
   return (
     <div className="page-shell offer-page-shell">
-      <div className="page-header"><div className="page-actions page-actions-top"><Link href="/" className="page-back">← Home</Link></div><p className="eyebrow">SM Photography · Limited promotion</p><h1>{offer.title}</h1></div>
+      <div className="page-header"><div className="page-actions page-actions-top"><Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home"><span aria-hidden="true">←</span></Link></div><p className="eyebrow">SM Photography · Limited promotion</p><h1>{offer.title}</h1></div>
       <div className="page-content">
         <article className={`offer-detail-card ${offer.image ? '' : 'offer-detail-card--no-image'}`}>
           {offer.image && <img className="offer-detail-image" src={offer.image} alt={offer.title} />}

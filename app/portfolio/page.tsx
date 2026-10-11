@@ -11,8 +11,8 @@ export default function PortfolioPage() {
     <div className="page-shell">
       <div className="page-header">
         <div className="page-actions page-actions-top">
-          <Link href="/" className="page-back">
-            ← Back
+          <Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home">
+            <span aria-hidden="true">←</span>
           </Link>
         </div>
         <p className="eyebrow">Let us know</p>

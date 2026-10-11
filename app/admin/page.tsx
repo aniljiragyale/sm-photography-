@@ -242,7 +242,7 @@ export default function AdminPage() {
       <div className="page-header admin-header-row">
         <div>
           <div className="page-actions page-actions-top">
-            <Link href="/" className="page-back">← Back</Link>
+            <Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home"><span aria-hidden="true">←</span></Link>
           </div>
           <p className="eyebrow">Private dashboard</p>
           <h1>Admin Panel</h1>

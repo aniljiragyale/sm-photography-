@@ -150,7 +150,7 @@ export default function ClientGalleryPage() {
     <div className="page-shell">
       <div className="page-header">
         <div className="page-actions page-actions-top">
-          <button type="button" className="page-back" onClick={() => router.push('/client-gallery')}>← Back</button>
+          <button type="button" className="page-back back-icon" aria-label="Back to client galleries" title="Back to client galleries" onClick={() => router.push('/client-gallery')}><span aria-hidden="true">←</span></button>
         </div>
         <p className="eyebrow">SM Photography &amp; Films</p>
         <h1>{gallery.clientName}</h1>

@@ -75,8 +75,8 @@ export default function AdminLoginPage() {
 
           <div className="admin-actions">
             <button type="submit" className="submit-btn" disabled={isSubmitting}>{isSubmitting ? 'Signing in…' : 'Login'}</button>
-            <Link href="/" className="page-back">
-              Back to home
+            <Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home">
+              <span aria-hidden="true">←</span>
             </Link>
           </div>
         </form>
