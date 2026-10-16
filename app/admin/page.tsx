@@ -372,24 +372,6 @@ export default function AdminPage() {
           </section>
 
           <section className="admin-card">
-            <h2>Client event galleries</h2>
-            <p className="form-note">
-              Create private event galleries, upload event photos, and share the generated event code with your client.
-            </p>
-            <div className="admin-actions">
-              <Link href="/studio-login?next=%2Fstudio%2Fevents%2Fnew" className="submit-btn">
-                Create Event
-              </Link>
-              <Link href="/studio-login?next=%2Fstudio%2Fevents" className="btn btn-secondary">
-                View Events
-              </Link>
-            </div>
-            <p className="form-note">
-              Event management uses the Studio service login. If you are asked to sign in, open Studio Login first.
-            </p>
-          </section>
-
-          <section className="admin-card">
             <h2>Live gallery items</h2>
             <div className="admin-item-list">
               {customItems.length === 0 ? (
