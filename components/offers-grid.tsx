@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatOfferDiscount, type Offer, type OfferPackage } from '@/lib/offer-types';
+import { getOfferIntro, normalizeOfferCopy } from '@/lib/offer-copy';
 
 const WHATSAPP_NUMBER = '919511835507';
 
@@ -59,7 +60,7 @@ export function OffersGrid({ packageName, compact = false }: { packageName?: Off
             <p className="eyebrow">Featured offer / {featured.packages.join(' / ')}</p>
             <span className="featured-offer-discount">{formatOfferDiscount(featured)}</span>
             <h3><Link href={`/offers/${featured.slug}`}>{featured.title}</Link></h3>
-            <p>{featured.description}</p>
+            <p>{getOfferIntro(featured.description) || normalizeOfferCopy(featured.description)}</p>
             <Countdown endsAt={featured.endsAt} />
             <Link className="featured-offer-cta" href={`/offers/${featured.slug}`}>View offer and details <span aria-hidden="true">-&gt;</span></Link>
           </div>
@@ -74,7 +75,7 @@ export function OffersGrid({ packageName, compact = false }: { packageName?: Off
               <div className="offer-card-body">
                 <p className="offer-package-label">{offer.packages.join(' / ')}</p>
                 <h3><Link href={`/offers/${offer.slug}`}>{offer.title}</Link></h3>
-                <p>{offer.description}</p>
+                <p>{getOfferIntro(offer.description) || normalizeOfferCopy(offer.description)}</p>
                 <Countdown endsAt={offer.endsAt} />
                 <div className="offer-card-actions">
                   <Link href={`/offers/${offer.slug}`} className="offer-details-link">Offer details</Link>

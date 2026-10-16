@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Offer } from '@/lib/offer-types';
+import { getOfferIntro, normalizeOfferCopy } from '@/lib/offer-copy';
 
 export function HomeOfferPopup() {
   const [offer, setOffer] = useState<Offer | null>(null);
@@ -22,7 +23,18 @@ export function HomeOfferPopup() {
 
   useEffect(() => {
     if (!offer) { setOpen(false); return; }
-    const timer = window.setTimeout(() => setOpen(true), 750);
+    const seenKey = `sm-home-offer-seen:${offer.id}`;
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const reloadKey = `sm-home-offer-reload:${Math.floor(performance.timeOrigin)}`;
+    if (navigation?.type === 'reload' && !window.sessionStorage.getItem(reloadKey)) {
+      window.sessionStorage.removeItem(seenKey);
+      window.sessionStorage.setItem(reloadKey, '1');
+    }
+    if (window.sessionStorage.getItem(seenKey)) return;
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.setItem(seenKey, '1');
+      setOpen(true);
+    }, 750);
     return () => window.clearTimeout(timer);
   }, [offer?.id, offer?.updatedAt]);
 
@@ -37,7 +49,7 @@ export function HomeOfferPopup() {
         <div className="home-offer-ad-copy">
           <p className="eyebrow">{offer.label || 'Special Offer'} is waiting for you</p>
           <h2>{offer.title}</h2>
-          <p className="home-offer-ad-description">{offer.description}</p>
+          <p className="home-offer-ad-description">{getOfferIntro(offer.description) || normalizeOfferCopy(offer.description)}</p>
           <span className="home-offer-ad-packages">For {offer.packages.join(' / ')}</span>
           <p className="home-offer-ad-booking-prompt">Book your {offer.packages[0]?.toLowerCase() || ''} session today.</p>
           <Link className="home-offer-ad-cta" href={`/offers/${offer.slug}`}>View Full Details <span aria-hidden="true">→</span></Link>

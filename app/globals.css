@@ -1,6 +1,4 @@
 /* Theme version: light editorial refresh */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-
 :root {
   --bg: #f7f7f5;
   --bg-soft: #eeeee9;
@@ -28,7 +26,7 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Montserrat', sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.55;
@@ -178,6 +176,8 @@ main {
 .brand {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
+  margin-right: auto;
   gap: 10px;
   font-size: 0.9rem;
   font-weight: 700;
@@ -201,9 +201,9 @@ main {
 }
 
 .brand-mark img {
-  width: 124%;
-  height: 124%;
-  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   background: transparent;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.12)) saturate(1.15) contrast(1.08);
 }
@@ -216,8 +216,23 @@ main {
 .nav-wrap {
   display: flex;
   align-items: center;
+  margin-left: auto;
   gap: 18px;
   position: relative;
+}
+
+@media (min-width: 769px) {
+  .site-header-inner {
+    justify-content: flex-start;
+  }
+
+  .brand {
+    margin-right: auto;
+  }
+
+  .nav-wrap {
+    margin-left: auto;
+  }
 }
 
 .site-theme-toggle {
@@ -459,7 +474,7 @@ main {
 
 .reviews-heading {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
 }
@@ -759,6 +774,13 @@ main {
   border-top: 1px solid var(--line);
 }
 
+.branch-section-intro {
+  max-width: 620px;
+  margin-top: .55rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
 .branch-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -799,8 +821,17 @@ main {
 }
 
 .branch-card-copy a {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
   color: var(--gold);
+  font-weight: 700;
   text-decoration: underline;
+}
+
+.branch-card-copy .branch-address {
+  margin-bottom: .65rem;
+  color: var(--muted);
 }
 
 @media (max-width: 720px) {
@@ -1480,6 +1511,8 @@ main {
 .offer-whatsapp:hover { background: #3b2d13; }
 .offer-detail-card { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr); overflow: hidden; border: 1px solid rgba(177,132,47,.38); border-radius: 24px; background: #11100e; color: #f6f1e5; }
 .offer-detail-card--no-image { grid-template-columns: minmax(0, 1fr); }
+.offer-detail-card--maternity { grid-template-columns: minmax(0, 1fr); }
+.offer-detail-card--maternity .offer-detail-image { height: clamp(220px, 34vw, 440px); min-height: 0; object-fit: cover; }
 .offer-detail-image { width: 100%; height: 100%; min-height: 440px; object-fit: cover; }
 .offer-detail-copy { align-self: center; padding: clamp(1.3rem, 4vw, 3rem); }
 .offer-detail-ribbon { margin-bottom: 1rem; }
@@ -1489,6 +1522,10 @@ main {
 .offer-detail-copy > p:not(.offer-detail-discount) { white-space: pre-line; }
 .offer-detail-packages { margin-top: 1rem; }
 .offer-detail-actions { display: grid; gap: .9rem; margin-top: 1.5rem; }
+.offer-maternity-packages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.offer-detail-card .offer-maternity-packages .package-card { color: #302a21; }
+.offer-detail-card .offer-maternity-packages .price { color: #80601f; font-size: clamp(1.3rem, 2vw, 1.8rem); }
+.offer-package-note { color: #e4d6b9; line-height: 1.7; }
 .offer-detail-actions label { display: grid; gap: .5rem; color: #e8d7ab; }
 .offer-detail-countdown { color: #f0cf7b; font-weight: 800; }
 .offer-whatsapp--large { min-height: 3.2rem; }
@@ -1509,7 +1546,7 @@ main {
 .offer-upload-preview { display: block; width: min(100%, 440px); max-height: 220px; margin: .6rem 0; border-radius: 12px; object-fit: cover; }
 .offer-template-button { margin: .4rem 0 1rem; }
 /* Colorful best-offer sticker sits over the homepage hero, not in the navigation. */
-@media (max-width: 720px) { .offer-detail-card { grid-template-columns: 1fr; } .offer-detail-image { width: 100%; height: auto; min-height: 0; max-height: 70dvh; aspect-ratio: 2 / 3; object-fit: contain; background: #100e0b; } .offers-admin-item { grid-template-columns: 1fr; } .offers-admin-item > img { width: 100%; height: 180px; } .offers-heading { align-items: start; flex-direction: column; } .featured-offer { grid-template-columns: 1fr; min-height: 0; } .featured-offer-art { min-height: 0; aspect-ratio: 2 / 3; background-size: contain; } .featured-offer-art::after { background: linear-gradient(180deg, transparent 80%, #11100e); } }
+@media (max-width: 720px) { .offer-detail-card { grid-template-columns: 1fr; } .offer-detail-image { width: 100%; height: auto; min-height: 0; max-height: 70dvh; aspect-ratio: 2 / 3; object-fit: contain; background: #100e0b; } .offer-detail-card--maternity .offer-detail-image { height: clamp(180px, 62vw, 300px); max-height: 300px; aspect-ratio: auto; object-fit: cover; } .offer-maternity-packages { grid-template-columns: 1fr; } .offers-admin-item { grid-template-columns: 1fr; } .offers-admin-item > img { width: 100%; height: 180px; } .offers-heading { align-items: start; flex-direction: column; } .featured-offer { grid-template-columns: 1fr; min-height: 0; } .featured-offer-art { min-height: 0; aspect-ratio: 2 / 3; background-size: contain; } .featured-offer-art::after { background: linear-gradient(180deg, transparent 80%, #11100e); } }
 
 /* Small, share-poster-inspired offer sticker in the shared header. */
 .site-offer-badge { position: relative; isolation: isolate; display: block; flex: 0 0 auto; width: 76px; line-height: 0; filter: drop-shadow(0 5px 8px rgba(0,0,0,.24)); transition: transform .2s ease, filter .2s ease; animation: site-offer-bob 3s ease-in-out infinite; }
@@ -3709,9 +3746,10 @@ select:focus {
 }
 
 .site-offer-active-marker { position: absolute; width: 0; height: 0; overflow: hidden; }
-.hero-section > .hero-offer-badge { position: absolute; z-index: 3; top: clamp(1px, .5vw, 6px); right: clamp(1px, .5vw, 6px); width: 82px; }
-@media (max-width: 768px) { .hero-section > .hero-offer-badge { top: 1px; right: 1px; width: 64px; } }
+.hero-section > .hero-offer-badge { position: absolute; z-index: 3; top: clamp(4px, .8vw, 12px); right: clamp(4px, .8vw, 12px); width: 112px; }
+@media (max-width: 768px) { .hero-section > .hero-offer-badge { top: 4px; right: 4px; width: 76px; } }
 @media (max-width: 480px) {
-  .header-buttons { flex-direction: row; flex-wrap: nowrap; gap: .4rem; width: 100%; }
-  .header-buttons .btn { box-sizing: border-box; flex: 1 1 0; width: 0; min-width: 0; max-width: 100%; overflow: hidden; padding: .58rem .1rem; font-size: clamp(.52rem, 2.2vw, .66rem); line-height: 1.1; letter-spacing: -.02em; white-space: nowrap; }
+  .header-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; width: min(100%, 360px); margin: 0 auto; }
+  .header-buttons .btn { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; padding: .7rem .35rem; font-size: clamp(.72rem, 3.3vw, .88rem); line-height: 1.15; white-space: nowrap; }
+  .hero-section > .hero-offer-badge { width: 64px; }
 }

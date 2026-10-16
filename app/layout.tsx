@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   title: 'SM Photography and Films',
   description: 'Photography portfolio and wedding film studio in Sangli, Maharashtra.',
   icons: {
-    icon: '/images/sm-photography-social.png',
+    icon: [{ url: '/favicon.png', type: 'image/png', sizes: '512x512' }],
+    apple: '/favicon.png',
   },
   openGraph: {
     title: 'SM Photography and Films',
@@ -27,14 +28,40 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
   themeColor: '#0d0d0d',
+};
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'SM Photography and Films',
+  alternateName: 'SM Photography',
+  url: 'https://www.smphotography.co.in',
+  logo: {
+    '@type': 'ImageObject',
+    url: 'https://www.smphotography.co.in/favicon.png',
+    width: 512,
+    height: 512,
+  },
+  telephone: '+91 95118 35507',
+  address: [
+    { '@type': 'PostalAddress', addressLocality: 'Malgaon', addressRegion: 'Maharashtra', addressCountry: 'IN' },
+    { '@type': 'PostalAddress', addressLocality: 'Miraj', addressRegion: 'Maharashtra', addressCountry: 'IN' },
+  ],
+  sameAs: [
+    'https://www.linkedin.com/in/satishmolekar',
+    'https://www.facebook.com/share/1FDbovcGCA',
+    'https://www.instagram.com/sm_photography.in/',
+    'https://www.instagram.com/the_sm_studio__/',
+    'https://youtube.com/@sm_photography_film',
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
         <SiteThemeProvider>
           <SiteHeader />
           <main>{children}</main>

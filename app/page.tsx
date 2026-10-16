@@ -164,6 +164,7 @@ export default function HomePage() {
             <div className="header-buttons">
               <Link href="/package" className="btn btn-primary">Packages</Link>
               <Link href="/ourservices" className="btn btn-secondary">Our Services</Link>
+              <Link href="/gallery" className="btn btn-secondary">Gallery</Link>
               <Link href="/booknow" className="btn btn-accent">Book Your Session</Link>
             </div>
           </div>

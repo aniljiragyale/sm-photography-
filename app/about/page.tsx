@@ -50,6 +50,8 @@ export default function AboutPage() {
             <img
               src="/images/MY PHOTO.jpg"
               alt="Satish Molekar of SM Photography"
+              fetchPriority="high"
+              decoding="async"
               style={{ borderRadius: '22px', width: '100%', minHeight: '420px', objectFit: 'cover' }}
             />
           </div>
@@ -57,7 +59,7 @@ export default function AboutPage() {
           <div className="about-intro-copy">
             <h2>Capturing life with feeling</h2>
             <p>
-              Based in Malgaon, Sangli district, I have a deep-rooted passion for photography and specialize in capturing not just moments — but emotions, stories, and connections that last a lifetime.
+              I am Satish Molekar, a photographer based in Malgaon, Sangli district. I built SM Photography around a simple idea: photographs should preserve the feelings, stories, and connections behind every important moment.
             </p>
             <p>
               Whether it is a grand wedding, an intimate maternity shoot, a stylish modeling portfolio, or candid life moments, I bring a unique blend of creativity, professionalism, and attention to detail to every frame.
@@ -67,6 +69,9 @@ export default function AboutPage() {
             </p>
             <p>
               Every photograph we create is shaped with heart, precision, and artistic intention so your memories remain timeless.
+            </p>
+            <p>
+              As the studio grew, I opened a second SM Photography &amp; Films branch in Miraj. Clients can now connect with our team in both Malgaon and Miraj for weddings, maternity portraits, events, and other photography sessions.
             </p>
           </div>
         </div>
@@ -82,15 +87,17 @@ export default function AboutPage() {
 
         <section className="branch-section">
           <p className="eyebrow">Visit our studios</p>
-          <h2>Studio branches</h2>
+          <h2>Two studio locations, one creative team</h2>
+          <p className="branch-section-intro">Choose the location that works best for you. Open a map for directions or contact us to plan your session.</p>
           <div className="branch-grid">
             {branches.map((branch, index) => (
               <article className="branch-card animated-card" key={branch.id} style={{ animationDelay: `${index * 100}ms` }}>
-                {branch.image ? <img src={branch.image} alt={branch.name} /> : null}
+                {branch.image ? <img src={branch.image} alt={branch.name} loading="lazy" decoding="async" /> : null}
                 <div className="branch-card-copy">
                   <h3>{branch.name}</h3>
                   <p>{branch.description}</p>
-                  <a href={branch.locationUrl} target="_blank" rel="noreferrer">{branch.address}</a>
+                  <p className="branch-address">{branch.address}</p>
+                  <a href={branch.locationUrl} target="_blank" rel="noreferrer" aria-label={`Get directions to ${branch.name}`}>Get directions <span aria-hidden="true">→</span></a>
                 </div>
               </article>
             ))}

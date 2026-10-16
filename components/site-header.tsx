@@ -25,7 +25,7 @@ export function SiteHeader() {
       <div className="site-header-inner">
         <Link href="/" className="brand" aria-label="SM Photography home">
           <span className="brand-mark">
-            <img src="/images/IMG_1786.PNG" alt="SM Photography logo" />
+            <img src="/favicon.png" alt="SM Photography logo" width="512" height="512" fetchPriority="high" />
           </span>
           <span className="brand-text">SM PHOTOGRAPHY</span>
         </Link>
