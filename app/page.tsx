@@ -10,14 +10,14 @@ const galleryMoments = [
   {
     title: 'Wedding Moments',
     body:
-      'Weddings are a beautiful symphony of love, family, and tradition. We capture the emotional glances, joyful tears, and warm celebrations that turn a single day into a lifetime of treasured memories. Every frame is composed to feel cinematic, personal, and timeless.',
+      'Weddings are a beautiful symphony of love, family, and tradition. We capture the emotional glances, joyful tears, and warm celebrations that turn a single day into a lifetime of treasured memories. Every frame is composed to feel cinematic, personal, and timeless. From the quiet details before the ceremony to the joy on the dance floor, we follow the moments as they naturally unfold. Your photographs bring the people, feeling, and story of the day together in a collection you will love revisiting.',
     details: ['Candid couple portraits', 'Family traditions and rituals', 'Cinematic storytelling from morning to reception'],
     image: '/images/Wedding (34).JPG',
   },
   {
     title: 'Pre-Wedding Love Story',
     body:
-      'Your journey as a couple deserves a meaningful beginning. We create romantic, natural images that reflect your chemistry, personality, and the quiet moments that make your story unique. These portraits become a beautiful chapter before the wedding begins.',
+      'Your journey as a couple deserves a meaningful beginning. We create romantic, natural images that reflect your chemistry, personality, and the quiet moments that make your story unique. These portraits become a beautiful chapter before the wedding begins. Choose a place that feels like you, and we will help make the session relaxed and comfortable. The result is a set of photographs that feels genuine, expressive, and unmistakably yours.',
     details: ['Location-based romantic frames', 'Natural posing with candid emotions', 'Elegant storytelling for couples'],
     image: '/images/Prewedding (23).jpg',
     reverse: true,
@@ -25,14 +25,14 @@ const galleryMoments = [
   {
     title: 'Engagement Elegance',
     body:
-      'Engagements are the promise of a lifetime, and we frame that promise with grace. From surprise proposals to ring ceremonies, we document the excitement, affection, and togetherness that define this special milestone with elegant storytelling.',
+      'Engagements are the promise of a lifetime, and we frame that promise with grace. From surprise proposals to ring ceremonies, we document the excitement, affection, and togetherness that define this special milestone with elegant storytelling. We pay attention to the little reactions and meaningful details that make your celebration personal. Each image helps preserve the anticipation and happiness you shared with the people closest to you.',
     details: ['Proposal and ring ceremony coverage', 'Stylish close-up portraits', 'Story-driven celebration moments'],
     image: '/images/Engg (1).jpeg',
   },
   {
     title: 'Maternity Magic',
     body:
-      'Pregnancy is a miraculous chapter filled with glow, anticipation, and deep emotion. Our maternity shoots celebrate the beauty of motherhood through soft light, gentle posing, and portraits that feel calm, intimate, and deeply personal.',
+      'Pregnancy is a miraculous chapter filled with glow, anticipation, and deep emotion. Our maternity shoots celebrate the beauty of motherhood through soft light, gentle posing, and portraits that feel calm, intimate, and deeply personal. We shape the session around your comfort, style, and the people you want beside you. The photographs become a tender reminder of the excitement and connection surrounding this new beginning.',
     details: ['Soft natural-light portraits', 'Comfortable styling guidance', 'Keepsake images for family albums'],
     image: '/images/Maternity (30).jpg',
     reverse: true,
@@ -40,14 +40,14 @@ const galleryMoments = [
   {
     title: 'Candid Moments',
     body:
-      'Life’s most beautiful memories are often the unplanned ones. We focus on natural smiles, heartfelt laughter, tears of joy, and the honest expressions that make every celebration feel real, warm, and unforgettable.',
+      'Life’s most beautiful memories are often the unplanned ones. We focus on natural smiles, heartfelt laughter, tears of joy, and the honest expressions that make every celebration feel real, warm, and unforgettable. By staying attentive and unobtrusive, we let the day happen while noticing the moments that matter. Your gallery feels spontaneous and full of the people, energy, and emotion you remember.',
     details: ['Authentic real-life expressions', 'Fun family laughter and reactions', 'Emotion-rich event storytelling'],
     image: '/images/Candid (8).jpeg',
   },
   {
     title: 'Modeling Portfolio',
     body:
-      'First impressions matter, and we build portfolios that reflect confidence and individuality. From styling guidance to elegant posing, each frame is designed to highlight your personality, presence, and visual identity in a polished and memorable way.',
+      'First impressions matter, and we build portfolios that reflect confidence and individuality. From styling guidance to elegant posing, each frame is designed to highlight your personality, presence, and visual identity in a polished and memorable way. We create a varied selection of looks and compositions so your images feel versatile and considered. You leave with photographs that express your character and present your best self with confidence.',
     details: ['Editorial pose direction', 'Creative styling and visual framing', 'Work-ready portfolio visuals'],
     image: '/images/Modeling (5).jpg',
     reverse: true,
