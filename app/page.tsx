@@ -88,6 +88,18 @@ const services = [
   'Drone Shoot',
 ];
 
+const serviceDetails: Record<string, { category: string; description: string }> = {
+  'Wedding Shoot': { category: 'WEDDINGS', description: 'The full story of your day, captured with care from the quiet details to the dance floor.' },
+  'Pre-Wedding Shoot': { category: 'COUPLES', description: 'An easygoing session shaped around your story, your style, and a place you love.' },
+  'Cinematic Videography': { category: 'FILM', description: 'A polished film that brings the voices, movement, and feeling of your day back to life.' },
+  'Maternity Photography': { category: 'MATERNITY', description: 'A thoughtful portrait session celebrating this season and the connection already growing.' },
+  'Outdoor Sessions': { category: 'PORTRAITS', description: 'Natural portraits made outdoors, using beautiful light and room to feel at ease.' },
+  'Event Coverage': { category: 'CELEBRATIONS', description: 'The people, atmosphere, and small moments that make your gathering memorable.' },
+  'Candid Photography': { category: 'MOMENTS', description: 'Unposed expressions and real interactions, noticed as they happen.' },
+  'Modeling Portfolios': { category: 'PORTFOLIOS', description: 'Confident, varied portraits with considered direction, lighting, and composition.' },
+  'Drone Shoot': { category: 'AERIAL', description: 'A fresh perspective on your venue and celebration, captured from above.' },
+};
+
 const reviews = [
   { quote: 'The photographs feel full of emotion and every important family moment was beautifully captured.', name: 'Anita Desai', role: 'Wedding client', initials: 'AD' },
   { quote: 'Professional, comfortable, and creative from the first consultation to the final gallery.', name: 'Sarah Jenkins', role: 'Pre-wedding client', initials: 'SJ' },
@@ -237,24 +249,28 @@ export default function HomePage() {
 
       <section className="services-showcase section-block">
         <div className="container">
-          <div className="section-heading">
-            <p className="eyebrow">What we do best</p>
-            <h2>Signature Services</h2>
-            <p className="signature-services-intro">Considered photography and film for celebrations, milestones, and the people who make them matter.</p>
+          <div className="signature-services-heading">
+            <div>
+              <p className="eyebrow">What we do best</p>
+              <h2>Signature Services</h2>
+            </div>
+            <p className="signature-services-intro">Photography and film for the moments you want to keep close—made with care, shaped around you.</p>
           </div>
           <div className="signature-services-grid">
             {services.map((service, index) => (
-              <article key={service} className="signature-service-item animated-card" style={{ animationDelay: `${index * 75}ms` }}>
-                <span className="signature-service-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <article key={service} className={`signature-service-item${index === 0 ? ' signature-service-item--feature' : ''} animated-card`} style={{ animationDelay: `${index * 75}ms` }}>
+                <div className="signature-service-meta">
+                  <span className="signature-service-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="signature-service-category">{serviceDetails[service].category}</span>
+                </div>
                 <h3>{service}</h3>
-                <p>
-                  Crafted with artistic direction, thoughtful planning, and professional execution to turn your vision into timeless imagery.
-                </p>
+                <p>{serviceDetails[service].description}</p>
+                <span className="signature-service-orbit" aria-hidden="true" />
               </article>
             ))}
           </div>
           <div className="signature-services-footer">
-            <p>Made for your moment, never one-size-fits-all.</p>
+            <p><span aria-hidden="true">✳</span> Made for your moment, never one-size-fits-all.</p>
             <Link href="/ourservices" className="signature-services-link">Explore all services <span aria-hidden="true">↗</span></Link>
           </div>
         </div>
