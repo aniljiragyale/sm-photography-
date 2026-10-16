@@ -3833,6 +3833,3 @@ select:focus {
   .hero-section > .hero-offer-badge { width: 64px; }
 }
 
-.site-header-offer-badge { width: 58px; margin: 0 -4px; }
-@media (max-width: 768px) { .site-header-offer-badge { width: 52px; } }
-@media (max-width: 480px) { .site-header-offer-badge { width: 46px; } }
