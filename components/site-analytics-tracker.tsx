@@ -7,17 +7,21 @@ const VISIT_SESSION_KEY = 'sm-photography:visit-session';
 const VISIT_IDLE_LIMIT_MS = 30 * 60 * 1000;
 const VISIT_ID_PATTERN = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
 
+function getVisitIdInStorage(storage: Storage, now: number): string {
+  const saved = JSON.parse(storage.getItem(VISIT_SESSION_KEY) || 'null') as { id?: string; lastActivity?: number } | null;
+  const id = saved?.id && VISIT_ID_PATTERN.test(saved.id) && typeof saved.lastActivity === 'number' && now - saved.lastActivity < VISIT_IDLE_LIMIT_MS
+    ? saved.id
+    : crypto.randomUUID();
+  storage.setItem(VISIT_SESSION_KEY, JSON.stringify({ id, lastActivity: now }));
+  return id;
+}
+
 function getVisitId(): string {
   const now = Date.now();
   try {
-    const saved = JSON.parse(localStorage.getItem(VISIT_SESSION_KEY) || 'null') as { id?: string; lastActivity?: number } | null;
-    const id = saved?.id && VISIT_ID_PATTERN.test(saved.id) && typeof saved.lastActivity === 'number' && now - saved.lastActivity < VISIT_IDLE_LIMIT_MS
-      ? saved.id
-      : crypto.randomUUID();
-    localStorage.setItem(VISIT_SESSION_KEY, JSON.stringify({ id, lastActivity: now }));
-    return id;
+    return getVisitIdInStorage(localStorage, now);
   } catch {
-    return crypto.randomUUID();
+    try { return getVisitIdInStorage(sessionStorage, now); } catch { return crypto.randomUUID(); }
   }
 }
 
