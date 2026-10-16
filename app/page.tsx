@@ -12,14 +12,14 @@ const galleryMoments = [
     body:
       'Weddings are a beautiful symphony of love, family, and tradition. We capture the emotional glances, joyful tears, and warm celebrations that turn a single day into a lifetime of treasured memories. Every frame is composed to feel cinematic, personal, and timeless. From the quiet details before the ceremony to the joy on the dance floor, we follow the moments as they naturally unfold. Your photographs bring the people, feeling, and story of the day together in a collection you will love revisiting.',
     details: ['Candid couple portraits', 'Family traditions and rituals', 'Cinematic storytelling from morning to reception'],
-    image: '/images/Wedding (34).JPG',
+    image: '/images/wedding-moments-mobile.jpg',
   },
   {
     title: 'Pre-Wedding Love Story',
     body:
       'Your journey as a couple deserves a meaningful beginning. We create romantic, natural images that reflect your chemistry, personality, and the quiet moments that make your story unique. These portraits become a beautiful chapter before the wedding begins. Choose a place that feels like you, and we will help make the session relaxed and comfortable. The result is a set of photographs that feels genuine, expressive, and unmistakably yours.',
     details: ['Location-based romantic frames', 'Natural posing with candid emotions', 'Elegant storytelling for couples'],
-    image: '/images/Prewedding (23).jpg',
+    image: '/images/prewedding-love-story-mobile.jpg',
     reverse: true,
   },
   {
@@ -49,7 +49,7 @@ const galleryMoments = [
     body:
       'First impressions matter, and we build portfolios that reflect confidence and individuality. From styling guidance to elegant posing, each frame is designed to highlight your personality, presence, and visual identity in a polished and memorable way. We create a varied selection of looks and compositions so your images feel versatile and considered. You leave with photographs that express your character and present your best self with confidence.',
     details: ['Editorial pose direction', 'Creative styling and visual framing', 'Work-ready portfolio visuals'],
-    image: '/images/Modeling (5).jpg',
+    image: '/images/modeling-portfolio-mobile.jpg',
     reverse: true,
   },
 ];
@@ -222,7 +222,14 @@ export default function HomePage() {
               className={`gallery-row gallery-reveal ${item.reverse ? 'reverse' : ''}`}
               style={{ animationDelay: `${itemIndex * 90}ms` }}
             >
-              <div className="gallery-image" style={{ backgroundImage: `url("${imageUrl}")` }} />
+              <img
+                className="gallery-image"
+                src={imageUrl}
+                alt={`${item.title} photography`}
+                loading={itemIndex === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                fetchPriority={itemIndex === 0 ? 'high' : 'auto'}
+              />
               <div className="gallery-text">
                 <h2>{item.title}</h2>
                 <p>{item.body}</p>
