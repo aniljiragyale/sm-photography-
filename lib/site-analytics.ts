@@ -3,14 +3,16 @@ import { Redis } from '@upstash/redis';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const TOTAL_VIEWS_KEY = 'sm-photography:analytics:total-views';
-const DAILY_VIEW_PREFIX = 'sm-photography:analytics:daily-views:';
+const TOTAL_VISITS_KEY = 'sm-photography:analytics:total-visits';
+const DAILY_VISIT_PREFIX = 'sm-photography:analytics:daily-visits:';
+const VISIT_SESSION_PREFIX = 'sm-photography:analytics:visit-session:';
 const LOCAL_ANALYTICS_FILE = path.join(process.cwd(), 'data', 'site-analytics.json');
 const REDIS_DAILY_TTL_SECONDS = 60 * 60 * 24 * 400;
+const VISIT_IDLE_TTL_SECONDS = 30 * 60;
 
 export type AnalyticsSummary = {
-  totalViews: number;
-  dailyViews: Array<{ date: string; views: number }>;
+  totalVisits: number;
+  dailyVisits: Array<{ date: string; visits: number }>;
 };
 
 const hasRedisConfig = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
@@ -29,44 +31,65 @@ function recentDates(days = 30): string[] {
   return Array.from({ length: days }, (_, index) => getIndiaDate(days - index - 1));
 }
 
-async function readLocalData(): Promise<{ totalViews: number; dailyViews: Record<string, number> }> {
+async function readLocalData(): Promise<{ totalVisits: number; dailyVisits: Record<string, number>; activeVisits: Record<string, number> }> {
   try {
-    const parsed = JSON.parse(await fs.readFile(LOCAL_ANALYTICS_FILE, 'utf8')) as { totalViews?: number; dailyViews?: Record<string, number> };
+    const parsed = JSON.parse(await fs.readFile(LOCAL_ANALYTICS_FILE, 'utf8')) as { totalVisits?: number; dailyVisits?: Record<string, number>; activeVisits?: Record<string, number> };
     return {
-      totalViews: Number(parsed.totalViews) || 0,
-      dailyViews: parsed.dailyViews && typeof parsed.dailyViews === 'object' ? parsed.dailyViews : {},
+      totalVisits: Number(parsed.totalVisits) || 0,
+      dailyVisits: parsed.dailyVisits && typeof parsed.dailyVisits === 'object' ? parsed.dailyVisits : {},
+      activeVisits: parsed.activeVisits && typeof parsed.activeVisits === 'object' ? parsed.activeVisits : {},
     };
   } catch {
-    return { totalViews: 0, dailyViews: {} };
+    return { totalVisits: 0, dailyVisits: {}, activeVisits: {} };
   }
 }
 
 let localWriteQueue: Promise<unknown> = Promise.resolve();
 
-async function recordLocalView(): Promise<void> {
+async function recordLocalVisit(visitId: string): Promise<boolean> {
   const nextWrite = localWriteQueue.then(async () => {
     const data = await readLocalData();
+    const now = Date.now();
+    const lastActivity = data.activeVisits[visitId];
+    for (const [id, timestamp] of Object.entries(data.activeVisits)) {
+      if (now - timestamp >= VISIT_IDLE_TTL_SECONDS * 1000) delete data.activeVisits[id];
+    }
+    if (lastActivity && now - lastActivity < VISIT_IDLE_TTL_SECONDS * 1000) {
+      data.activeVisits[visitId] = now;
+      await fs.mkdir(path.dirname(LOCAL_ANALYTICS_FILE), { recursive: true });
+      await fs.writeFile(LOCAL_ANALYTICS_FILE, JSON.stringify(data, null, 2));
+      return false;
+    }
     const date = getIndiaDate();
-    data.totalViews += 1;
-    data.dailyViews[date] = (data.dailyViews[date] || 0) + 1;
+    data.totalVisits += 1;
+    data.dailyVisits[date] = (data.dailyVisits[date] || 0) + 1;
+    data.activeVisits[visitId] = now;
     await fs.mkdir(path.dirname(LOCAL_ANALYTICS_FILE), { recursive: true });
     await fs.writeFile(LOCAL_ANALYTICS_FILE, JSON.stringify(data, null, 2));
+    return true;
   });
   localWriteQueue = nextWrite.catch(() => undefined);
-  await nextWrite;
+  return nextWrite;
 }
 
-export async function recordSiteView(): Promise<void> {
+export async function recordSiteVisit(visitId: string): Promise<void> {
   if (!hasRedisConfig()) {
     if (process.env.VERCEL) throw new Error('Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to store analytics on Vercel.');
-    await recordLocalView();
+    await recordLocalVisit(visitId);
     return;
   }
 
   const redis = Redis.fromEnv();
-  const dailyKey = `${DAILY_VIEW_PREFIX}${getIndiaDate()}`;
+  const sessionKey = `${VISIT_SESSION_PREFIX}${visitId}`;
+  const isNewVisit = await redis.set(sessionKey, '1', { nx: true, ex: VISIT_IDLE_TTL_SECONDS });
+  if (isNewVisit !== 'OK') {
+    await redis.expire(sessionKey, VISIT_IDLE_TTL_SECONDS);
+    return;
+  }
+
+  const dailyKey = `${DAILY_VISIT_PREFIX}${getIndiaDate()}`;
   await Promise.all([
-    redis.incr(TOTAL_VIEWS_KEY),
+    redis.incr(TOTAL_VISITS_KEY),
     redis.incr(dailyKey).then(() => redis.expire(dailyKey, REDIS_DAILY_TTL_SECONDS)),
   ]);
 }
@@ -76,13 +99,13 @@ export async function getSiteAnalytics(): Promise<AnalyticsSummary> {
   if (!hasRedisConfig()) {
     if (process.env.VERCEL) throw new Error('Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to view deployed analytics.');
     const data = await readLocalData();
-    return { totalViews: data.totalViews, dailyViews: dates.map((date) => ({ date, views: data.dailyViews[date] || 0 })) };
+    return { totalVisits: data.totalVisits, dailyVisits: dates.map((date) => ({ date, visits: data.dailyVisits[date] || 0 })) };
   }
 
   const redis = Redis.fromEnv();
-  const [total, ...daily] = await redis.mget<number[]>(TOTAL_VIEWS_KEY, ...dates.map((date) => `${DAILY_VIEW_PREFIX}${date}`));
+  const [total, ...daily] = await redis.mget<number[]>(TOTAL_VISITS_KEY, ...dates.map((date) => `${DAILY_VISIT_PREFIX}${date}`));
   return {
-    totalViews: Number(total) || 0,
-    dailyViews: dates.map((date, index) => ({ date, views: Number(daily[index]) || 0 })),
+    totalVisits: Number(total) || 0,
+    dailyVisits: dates.map((date, index) => ({ date, visits: Number(daily[index]) || 0 })),
   };
 }

@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 import { isStudioAdmin } from '@/lib/offer-auth';
-import { getSiteAnalytics, recordSiteView } from '@/lib/site-analytics';
+import { getSiteAnalytics, recordSiteVisit } from '@/lib/site-analytics';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { path?: string };
-    if (typeof body.path !== 'string' || !body.path.startsWith('/') || body.path.startsWith('//')) {
-      return NextResponse.json({ error: 'Invalid page path.' }, { status: 400 });
+    const body = await request.json() as { path?: string; visitId?: string };
+    if (typeof body.path !== 'string' || !body.path.startsWith('/') || body.path.startsWith('//') || !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(body.visitId || '')) {
+      return NextResponse.json({ error: 'Invalid visit.' }, { status: 400 });
     }
-    await recordSiteView();
+    await recordSiteVisit(body.visitId!);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to record site visit.';

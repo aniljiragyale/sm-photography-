@@ -31,7 +31,7 @@ const initialForm = {
   description: '',
 };
 
-type AnalyticsSummary = { totalViews: number; dailyViews: Array<{ date: string; views: number }> };
+type AnalyticsSummary = { totalVisits: number; dailyVisits: Array<{ date: string; visits: number }> };
 
 export default function AdminPage() {
   const router = useRouter();
@@ -279,19 +279,19 @@ export default function AdminPage() {
         <section className="admin-card analytics-card" aria-labelledby="analytics-heading">
           <div>
             <p className="eyebrow">Website traffic</p>
-            <h2 id="analytics-heading">Page views</h2>
-            <p className="form-note">Counts every public page opened, including visits from new and returning viewers.</p>
+            <h2 id="analytics-heading">Website visits</h2>
+            <p className="form-note">Refreshes and page changes in the same active visit are counted once. A new visit is counted after 30 minutes without activity. Visit counts start fresh; older page-view totals used a different measure.</p>
           </div>
           {analytics ? (
             <>
               <div className="analytics-headline">
-                <strong className="analytics-total">{analytics.totalViews.toLocaleString()}</strong>
-                <span>Total page views</span>
+                <strong className="analytics-total">{analytics.totalVisits.toLocaleString()}</strong>
+                <span>Total visits</span>
               </div>
-              <div className="analytics-day-list" aria-label="Daily page views for the last 7 days">
-                {analytics.dailyViews.slice(-7).map((day) => (
+              <div className="analytics-day-list" aria-label="Daily website visits for the last 7 days">
+                {analytics.dailyVisits.slice(-7).map((day) => (
                   <div className="analytics-day" key={day.date}>
-                    <strong>{day.views.toLocaleString()}</strong>
+                    <strong>{day.visits.toLocaleString()}</strong>
                     <span>{new Date(`${day.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                   </div>
                 ))}

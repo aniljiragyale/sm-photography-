@@ -32,7 +32,7 @@ After connecting both integrations, redeploy the `main` branch. Gallery and bran
 
 ### View website traffic
 
-The site records a page view whenever a visitor opens a public page or moves to another page. The admin dashboard at `/admin` shows the all-time total and daily views for the last seven days. Local development stores the count in `data/site-analytics.json`; Vercel stores it in the connected Upstash Redis database, so configure both Upstash variables above and redeploy for production reporting.
+The site counts one visit per active browser session. Refreshing or moving between pages does not add another visit; a new visit is counted after 30 minutes without activity. The admin dashboard at `/admin` shows the all-time total and daily visits for the last seven days. Local development stores counts in `data/site-analytics.json`; Vercel stores them in the connected Upstash Redis database, so configure both Upstash variables above and redeploy for production reporting.
 
 ### Manage offers
 
