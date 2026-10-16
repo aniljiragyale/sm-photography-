@@ -4,14 +4,16 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useSiteTheme } from '@/components/site-theme-provider';
 
 type SiteContent = {
-  packages?: Array<{ name: string }>;
+  packages?: Array<{ name: string; items?: string[] }>;
   services?: Array<{ title: string; description: string; deliverables: string }>;
-  branches?: Array<{ name: string; address: string; locationUrl: string }>;
+  branches?: Array<{ name: string; address: string; description?: string; locationUrl: string }>;
+  gallery?: Array<{ title: string; category: string; description?: string }>;
+  offers?: Array<{ title: string; description: string; packages: string[]; startsAt: string; endsAt: string | null }>;
 };
 
 type ReplyLink = { label: string; href: string };
 type ChatLanguage = 'en' | 'hi' | 'mr';
-type ChatIntent = 'packages' | 'owner' | 'services' | 'contact';
+type ChatIntent = 'packages' | 'owner' | 'services' | 'contact' | 'offers';
 type ChatMessage = {
   id: number;
   role: 'assistant' | 'visitor';
@@ -32,9 +34,9 @@ const chatCopy = {
     suggestions: 'Suggested questions',
     welcome: 'Hi! Ask about Satish, packages, services, bookings, or studio locations.',
     greeting: 'Hello! I’m the SM Photography & Films assistant. What can I help you with today?',
-    owner: 'SM Photography & Films is owned and led by photographer Satish Molekar in Malgaon, Sangli. His profile highlights wedding, maternity, modeling, and candid work, with a focus on creativity, detail, and helping clients feel at ease. His published profile does not state years of experience.',
-    packageOne: (name: string) => `${name} is available. For package details, pricing, and availability, contact Satish directly on WhatsApp or call +91 95118 35507.`,
-    packageList: (list: string) => `SM Photography offers these packages:\n${list}\nFor pricing and availability, contact Satish on WhatsApp or call +91 95118 35507.`,
+    owner: 'Satish Molekar is the photographer and creative lead behind SM Photography & Films. He brings extensive hands-on experience across weddings, maternity portraits, events, modeling portfolios, and candid photography, with an approach built around personal stories, thoughtful direction, and making clients feel comfortable. The studio serves clients from its Malgaon and Miraj branches.',
+    packageOne: (name: string, items: string[]) => `${name}${items.length ? ` includes:\n${items.map((item) => `• ${item}`).join('\n')}` : ' is available'}. The website asks clients to enquire for current pricing and availability.`,
+    packageList: (list: string) => `SM Photography offers these packages:\n${list}\nThe website asks clients to enquire for current pricing and availability.`,
     packageMissing: 'Tell me which package you are considering and I can share its details. For a quote, contact Satish on WhatsApp or call +91 95118 35507.',
     serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description} What you receive: ${deliverables}`,
     serviceList: (list: string) => `SM Photography offers ${list}. Tell me which one you have in mind and I’ll explain what it includes. You can also contact Satish on WhatsApp for a tailored quote.`,
@@ -51,6 +53,7 @@ const chatCopy = {
     send: 'Send message',
     close: 'Close chat',
     packagesPrompt: 'Packages & pricing',
+    offersPrompt: 'Current offers',
     servicesPrompt: 'Our services',
     locationsPrompt: 'Studio locations',
     experiencePrompt: 'About Satish',
@@ -81,7 +84,7 @@ const chatCopy = {
     welcome: 'नमस्ते! सतीश जी, पैकेज, सेवाओं, बुकिंग या स्टूडियो के पते के बारे में पूछें।',
     greeting: 'नमस्ते! मैं SM Photography & Films का सहायक हूँ। आज मैं आपकी किस तरह मदद कर सकता हूँ?',
     owner: 'SM Photography & Films के मालिक और फ़ोटोग्राफ़र सतीश मोलेकर हैं। उनका स्टूडियो मालगांव, सांगली में है। वे शादी, मैटरनिटी, मॉडलिंग और कैंडिड फ़ोटोग्राफ़ी करते हैं। उनका प्रोफ़ाइल रचनात्मकता, बारीकी और सहज ग्राहक अनुभव पर ज़ोर देता है।',
-    packageOne: (name: string) => `${name} उपलब्ध है। पैकेज की जानकारी, कीमत और उपलब्धता के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।`,
+    packageOne: (name: string, _items: string[] = []) => `${name} उपलब्ध है। पैकेज की जानकारी, कीमत और उपलब्धता के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।`,
     packageList: (list: string) => `SM Photography के पैकेज:\n${list}\nकीमत और उपलब्धता के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।`,
     packageMissing: 'आप किस पैकेज के बारे में जानना चाहते हैं? जानकारी और कोटेशन के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।',
     serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description} आपको मिलेगा: ${deliverables}`,
@@ -99,6 +102,7 @@ const chatCopy = {
     send: 'संदेश भेजें',
     close: 'चैट बंद करें',
     packagesPrompt: 'पैकेज और कीमत',
+    offersPrompt: 'मौजूदा ऑफ़र',
     servicesPrompt: 'हमारी सेवाएँ',
     locationsPrompt: 'स्टूडियो का पता',
     experiencePrompt: 'सतीश के बारे में',
@@ -129,7 +133,7 @@ const chatCopy = {
     welcome: 'नमस्कार! सतीश, पॅकेज, सेवा, बुकिंग किंवा स्टुडिओच्या पत्त्याबद्दल विचारा.',
     greeting: 'नमस्कार! मी SM Photography & Films चा सहाय्यक आहे. आज मी तुम्हाला कशी मदत करू?',
     owner: 'SM Photography & Films चे मालक आणि छायाचित्रकार सतीश मोळेकर आहेत. त्यांचा स्टुडिओ मालगाव, सांगली येथे आहे. ते लग्न, मॅटर्निटी, मॉडेलिंग आणि कॅन्डिड छायाचित्रण करतात. त्यांच्या प्रोफाइलमध्ये सर्जनशीलता, बारकावे आणि ग्राहकांचा सहज अनुभव यावर भर आहे.',
-    packageOne: (name: string) => `${name} उपलब्ध आहे. पॅकेजचे तपशील, किंमत आणि उपलब्धतेसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.`,
+    packageOne: (name: string, _items: string[] = []) => `${name} उपलब्ध आहे. पॅकेजचे तपशील, किंमत आणि उपलब्धतेसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.`,
     packageList: (list: string) => `SM Photography ची पॅकेजेस:\n${list}\nकिंमत आणि उपलब्धतेसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.`,
     packageMissing: 'कोणत्या पॅकेजबद्दल जाणून घ्यायचे आहे? माहितीसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.',
     serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description} तुम्हाला मिळेल: ${deliverables}`,
@@ -147,6 +151,7 @@ const chatCopy = {
     send: 'संदेश पाठवा',
     close: 'चॅट बंद करा',
     packagesPrompt: 'पॅकेज आणि किंमत',
+    offersPrompt: 'सध्याच्या ऑफर्स',
     servicesPrompt: 'आमच्या सेवा',
     locationsPrompt: 'स्टुडिओचे ठिकाण',
     experiencePrompt: 'सतीश यांच्याबद्दल',
@@ -260,6 +265,7 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   const normalized = normalizeText(question);
   const copy = chatCopy[language];
   const packages = (content?.packages || []).filter((item) => !item.name.toLowerCase().includes('terms'));
+  const offers = content?.offers || [];
   const mentionedPackage = packages.find((item) => {
     const packageName = normalizeText(item.name);
     const shortName = packageName.replace(/\bpackage\b/g, '').trim();
@@ -291,7 +297,7 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   if (mentionedPackage) {
     const packageName = localizePackageName(mentionedPackage.name, language);
     return {
-      text: copy.packageOne(packageName),
+      text: copy.packageOne(packageName, mentionedPackage.items || []),
       links: [
         { label: copy.packages, href: '/package' },
         { label: copy.whatsapp, href: whatsappLink(`Hello, please share current details for the ${mentionedPackage.name}.`) },
@@ -300,10 +306,47 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   }
 
   if (asksAboutPackages) {
-    const list = packages.map((item) => localizePackageName(item.name, language)).join('\n');
+    const list = packages.map((item) => `${localizePackageName(item.name, language)}${item.items?.length ? `: ${item.items.join(', ')}` : ''}`).join('\n');
     return {
       text: list ? copy.packageList(list) : copy.packageMissing,
       links: [{ label: copy.packages, href: '/package' }, { label: copy.whatsapp, href: whatsappLink('Hello, please share your current photography packages and pricing.') }],
+    };
+  }
+
+  if (intent === 'offers' || /discount|promotion|special price|current offers|any offers|show offers|show me offers|what offers/.test(normalized)) {
+    const currentOffers = offers.filter((offer) => Date.parse(offer.startsAt) <= Date.now() && (!offer.endsAt || Date.parse(offer.endsAt) > Date.now()));
+    return {
+      text: currentOffers.length
+        ? `Current offers listed on the website:\n${currentOffers.map((offer) => `${offer.title}: ${offer.description.replace(/\\n/g, ' ').replace(/\s+/g, ' ').trim()}`).join('\n')}`
+        : 'There are no current offers listed on the website. Contact the studio to ask about current promotions.',
+      links: [{ label: copy.packages, href: '/package' }, { label: copy.whatsapp, href: whatsappLink('Hello, please share your current photography offers.') }],
+    };
+  }
+
+  if (/everything|all details|all information|tell me about the studio|what do you offer|what all|overview/.test(normalized)) {
+    const details = [
+      `Photographer: Satish Molekar, with extensive hands-on experience in wedding, maternity, event, portrait, modeling, and candid photography.`,
+      `Services: ${(content?.services || []).map((item) => `${item.title}: ${item.description} Deliverables: ${item.deliverables}`).join('\n') || 'See the services page.'}`,
+      `Packages: ${packages.map((item) => `${item.name}${item.items?.length ? `: ${item.items.join(', ')}` : ''}`).join('\n') || 'See the packages page.'}`,
+      `Studios: ${(content?.branches || []).map((branch) => `${branch.name} (${branch.address})${branch.description ? `: ${branch.description}` : ''}`).join('\n') || 'Malgaon and Miraj.'}`,
+      `Portfolio categories: ${[...new Set((content?.gallery || []).map((item) => item.category))].join(', ') || 'See the gallery page.'}`,
+      `Current offers: ${offers.filter((offer) => Date.parse(offer.startsAt) <= Date.now() && (!offer.endsAt || Date.parse(offer.endsAt) > Date.now())).map((offer) => `${offer.title}: ${offer.description.replace(/\s+/g, ' ').trim()}`).join('\n') || 'No current offers listed.'}`,
+      'Contact: +91 95118 35507, smphotography5207@gmail.com.',
+    ].join('\n');
+    return {
+      text: `Here is what the SM Photography & Films website currently lists:\n${details}\nAsk me about any service or package for more detail, or contact Satish for a quote and date availability.`,
+      links: [{ label: copy.services, href: '/ourservices' }, { label: copy.packages, href: '/package' }, { label: copy.galleryLink, href: '/gallery' }, { label: copy.contactLink, href: '/contact' }],
+    };
+  }
+
+  const publishedService = (content?.services || []).find((item) => {
+    const serviceName = normalizeText(item.title);
+    return serviceName.length > 2 && normalized.includes(serviceName);
+  });
+  if (publishedService) {
+    return {
+      text: copy.serviceOne(publishedService.title, publishedService.description, publishedService.deliverables),
+      links: [{ label: copy.services, href: '/ourservices' }, { label: copy.book, href: '/booknow' }],
     };
   }
 
@@ -355,15 +398,16 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   }
 
   if (/gallery|portfolio|photos|pictures|work|गैलरी|फोटो|तस्वीर|छायाचित्र|गॅलरी|फोटो/.test(normalized)) {
+    const galleryHighlights = (content?.gallery || []).slice(0, 8).map((item) => `${item.title} (${item.category})${item.description ? `: ${item.description}` : ''}`).join('\n');
     return {
-      text: copy.gallery,
+      text: galleryHighlights ? `${copy.gallery}\n${galleryHighlights}` : copy.gallery,
       links: [{ label: copy.galleryLink, href: '/gallery' }, { label: copy.privateGallery, href: '/client-gallery' }],
     };
   }
 
   if (/location|address|branch|directions|where|malgaon|miraj|पता|लोकेशन|कहाँ|मालगांव|मिरज|ठिकाण|पत्ता|कुठे|मिरज/.test(normalized)) {
     const branches = content?.branches || [];
-    const branchList = branches.map((branch) => `${branch.name} — ${branch.address}`).join('\n');
+    const branchList = branches.map((branch) => `${branch.name} — ${branch.address}${branch.description ? `: ${branch.description}` : ''}`).join('\n');
     return {
       text: branchList ? copy.locations(branchList) : copy.contact,
       links: [...branches.map((branch) => ({ label: branch.name.replace('SM Photo Studio & Films - ', 'Map: '), href: branch.locationUrl })), { label: copy.call, href: 'tel:+919511835507' }],
@@ -402,9 +446,17 @@ export function SiteChatbot() {
 
   useEffect(() => {
     let isCurrent = true;
-    fetch('/api/content', { cache: 'no-store' })
-      .then((response) => response.ok ? response.json() as Promise<SiteContent> : null)
-      .then((data) => { if (isCurrent && data) setContent(data); })
+    Promise.all([
+      fetch('/api/content', { cache: 'no-store' }),
+      fetch('/api/offers', { cache: 'no-store' }),
+    ])
+      .then(async ([contentResponse, offersResponse]) => {
+        const [published, offers] = await Promise.all([
+          contentResponse.ok ? contentResponse.json() as Promise<Omit<SiteContent, 'offers'>> : null,
+          offersResponse.ok ? offersResponse.json() as Promise<NonNullable<SiteContent['offers']>> : [],
+        ]);
+        if (isCurrent && published) setContent({ ...published, offers: offers || [] });
+      })
       .catch(() => undefined);
     return () => { isCurrent = false; };
   }, []);
@@ -508,6 +560,8 @@ export function SiteChatbot() {
 
           <div className="chatbot-prompts" aria-label={copy.suggestions}>
             <button type="button" onClick={() => sendMessage(copy.packagesPrompt, 'packages')}>{copy.packagesPrompt}</button>
+            <button type="button" onClick={() => sendMessage(copy.offersPrompt, 'offers')}>{copy.offersPrompt}</button>
+            <button type="button" onClick={() => sendMessage(copy.locationsPrompt)}>{copy.locationsPrompt}</button>
             <button type="button" onClick={() => sendMessage(copy.experiencePrompt, 'owner')}>{copy.experiencePrompt}</button>
             <button type="button" onClick={() => sendMessage(copy.servicesPrompt, 'services')}>{copy.servicesPrompt}</button>
             <button type="button" onClick={() => sendMessage(copy.contactPrompt, 'contact')}>{copy.contactPrompt}</button>

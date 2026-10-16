@@ -59,10 +59,13 @@ export default function AboutPage() {
           <div className="about-intro-copy">
             <h2>I believe every photograph should make you feel something.</h2>
             <p>
-              I’m Satish Molekar, the photographer behind SM Photography &amp; Films. My journey began in Malgaon, where I learned that the most memorable photographs are about more than how a moment looks: they hold the joy, the people, and the feeling you want to remember.
+              I’m Satish Molekar, the photographer behind SM Photography &amp; Films. Based in Malgaon, Sangli district, I have built my work around one belief: photographs should preserve not just how an important moment looked, but the joy, the people, and the feeling you want to remember.
             </p>
             <p>
               That belief guides every wedding story, maternity portrait, event, and personal shoot I create. I take time to understand what matters to you, then bring together thoughtful direction and an eye for honest, meaningful moments.
+            </p>
+            <p>
+              Over the years, I have gained extensive hands-on experience photographing weddings, maternity sessions, events, portraits, and modeling portfolios. Every celebration teaches me something new, and I bring that experience, care, and attention to detail to each client’s story.
             </p>
             <p>
               I look for the little moments around the big ones: a proud glance, a shared laugh, or the details a family chose with care. Those are the frames that make a gallery feel like your story.
