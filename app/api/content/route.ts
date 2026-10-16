@@ -2,7 +2,8 @@ import { Redis } from '@upstash/redis';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { ADMIN_PASSWORD, DEFAULT_BANNER_IMAGE, defaultBranches, defaultPackages, defaultServices, type BranchItem, type GalleryItem, type PackageItem, type ServiceItem } from '@/lib/admin-data';
+import { DEFAULT_BANNER_IMAGE, defaultBranches, defaultPackages, defaultServices, type BranchItem, type GalleryItem, type PackageItem, type ServiceItem } from '@/lib/admin-data';
+import { isStudioAdmin } from '@/lib/offer-auth';
 
 const CONTENT_KEY = 'sm-photography:published-content';
 const CONTENT_FILE = path.join(process.cwd(), 'data', 'published-content.json');
@@ -69,8 +70,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (request.headers.get('x-admin-password') !== ADMIN_PASSWORD) {
+  if (!isStudioAdmin(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!hasRedisConfig() && process.env.VERCEL) {
+    return NextResponse.json({ error: 'Configure Upstash Redis to publish website content on Vercel.' }, { status: 503 });
   }
 
   try {
@@ -99,8 +103,11 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (request.headers.get('x-admin-password') !== ADMIN_PASSWORD) {
+  if (!isStudioAdmin(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!hasRedisConfig() && process.env.VERCEL) {
+    return NextResponse.json({ error: 'Configure Upstash Redis to manage website content on Vercel.' }, { status: 503 });
   }
   if (!hasRedisConfig()) {
     await clearLocalContent();

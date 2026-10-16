@@ -2,11 +2,15 @@ import { put } from '@vercel/blob';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { ADMIN_PASSWORD } from '@/lib/admin-data';
+import { isStudioAdmin } from '@/lib/offer-auth';
 
 export async function POST(request: Request) {
-  if (request.headers.get('x-admin-password') !== ADMIN_PASSWORD) {
+  if (!isStudioAdmin(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (process.env.VERCEL && !process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json({ error: 'Configure BLOB_READ_WRITE_TOKEN to upload images on Vercel.' }, { status: 503 });
   }
 
   const formData = await request.formData();
@@ -22,6 +26,9 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ url: blob.url });
   } catch {
+    if (process.env.VERCEL) {
+      return NextResponse.json({ error: 'Vercel Blob could not store this image. Check the Blob store and BLOB_READ_WRITE_TOKEN configuration.' }, { status: 503 });
+    }
     try {
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
       await fs.mkdir(uploadDir, { recursive: true });

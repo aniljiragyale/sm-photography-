@@ -1,3 +1,5 @@
+import { getBackendToken } from '@/lib/backend';
+
 export type GalleryItem = {
   id: string;
   title: string;
@@ -39,7 +41,6 @@ export type PublishedContent = {
 export const DEFAULT_BANNER_IMAGE = '/images/Prewedding (21).jpg';
 
 export const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@smphotography.com';
-export const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'change-this-password';
 export const ADMIN_LOGIN_KEY = 'sm_admin_logged_in';
 export const ADMIN_GALLERY_KEY = 'sm_admin_gallery_items';
 export const ADMIN_PACKAGES_KEY = 'sm_admin_packages';
@@ -113,7 +114,6 @@ export function isAdminLoggedIn(): boolean {
   if (typeof window === 'undefined') return false;
   return window.localStorage.getItem(ADMIN_LOGIN_KEY) === 'true';
 }
-
 export function setAdminLoggedIn(value: boolean): void {
   if (typeof window === 'undefined') return;
   if (value) {
@@ -236,15 +236,17 @@ export async function loadPublishedContent(): Promise<PublishedContent> {
   }
 }
 
-export async function savePublishedContent(content: PublishedContent, password: string): Promise<boolean> {
+export async function savePublishedContent(content: PublishedContent): Promise<boolean> {
   savePackages(content.packages);
   saveServices(content.services);
   saveBannerImage(content.bannerImage || DEFAULT_BANNER_IMAGE);
 
   try {
+    const token = getBackendToken();
+    if (!token) return false;
     const response = await fetch('/api/content', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(content),
     });
     return response.ok;
@@ -253,13 +255,15 @@ export async function savePublishedContent(content: PublishedContent, password: 
   }
 }
 
-export async function resetPublishedContent(password: string): Promise<boolean> {
+export async function resetPublishedContent(): Promise<boolean> {
   resetContent();
 
   try {
+    const token = getBackendToken();
+    if (!token) return false;
     const response = await fetch('/api/content', {
       method: 'DELETE',
-      headers: { 'x-admin-password': password },
+      headers: { Authorization: `Bearer ${token}` },
     });
     return response.ok;
   } catch {

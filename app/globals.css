@@ -187,14 +187,14 @@ main {
 }
 
 .brand-mark {
-  width: 68px;
-  height: 68px;
+  width: 118px;
+  height: 58px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 8px;
   overflow: hidden;
-  background: linear-gradient(180deg, #ffffff 0%, #f3f3f3 100%);
+  background: #111;
   border: 2px solid rgba(255, 209, 90, 0.9);
   box-shadow: 0 0 0 2px rgba(255, 209, 90, 0.18), 0 8px 18px rgba(0, 0, 0, 0.28);
   flex-shrink: 0;
@@ -204,7 +204,8 @@ main {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: transparent;
+  padding: 4px;
+  background: #111;
   filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.12)) saturate(1.15) contrast(1.08);
 }
 
@@ -1812,6 +1813,51 @@ textarea.form-field {
   padding: 1.3rem;
 }
 
+.analytics-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.analytics-headline {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  justify-items: end;
+  gap: .25rem;
+}
+
+.analytics-total {
+  color: var(--gold);
+  font-size: clamp(2.4rem, 6vw, 4.5rem);
+  line-height: 1;
+}
+
+.analytics-headline span { color: var(--muted); font-size: .85rem; }
+
+.analytics-day-list {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  gap: .5rem;
+  margin-top: .75rem;
+}
+
+.analytics-day {
+  display: grid;
+  gap: .3rem;
+  justify-items: center;
+  padding: .65rem .35rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.analytics-day strong { color: var(--gold); }
+.analytics-day span { color: var(--muted); font-size: .75rem; }
+
 .admin-card-heading {
   display: flex;
   align-items: flex-start;
@@ -2380,8 +2426,8 @@ textarea.form-field {
   }
 
   .brand-mark {
-    width: 36px;
-    height: 36px;
+    width: 76px;
+    height: 38px;
   }
 
   .page-back {
@@ -3678,8 +3724,8 @@ select:focus {
   }
 
   .brand-mark {
-    width: 42px;
-    height: 42px;
+    width: 76px;
+    height: 38px;
   }
 
   .brand-text {
@@ -3717,8 +3763,8 @@ select:focus {
   }
 
   .brand-mark {
-    width: 36px;
-    height: 36px;
+    width: 66px;
+    height: 34px;
   }
 
   .brand-text {

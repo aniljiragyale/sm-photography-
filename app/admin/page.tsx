@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   galleryCategories,
-  ADMIN_PASSWORD,
   getAllGalleryItems,
   getCustomGalleryItems,
   defaultPackages,
@@ -23,7 +22,7 @@ import {
   type ServiceItem,
   type BranchItem,
 } from '@/lib/admin-data';
-import { clearBackendToken } from '@/lib/backend';
+import { clearBackendToken, getBackendToken } from '@/lib/backend';
 
 const initialForm = {
   title: '',
@@ -31,6 +30,8 @@ const initialForm = {
   image: '',
   description: '',
 };
+
+type AnalyticsSummary = { totalViews: number; dailyViews: Array<{ date: string; views: number }> };
 
 export default function AdminPage() {
   const router = useRouter();
@@ -46,6 +47,8 @@ export default function AdminPage() {
   const [isBranchesSaving, setIsBranchesSaving] = useState(false);
   const [branchMessage, setBranchMessage] = useState('');
   const [message, setMessage] = useState('');
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [analyticsError, setAnalyticsError] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -53,6 +56,18 @@ export default function AdminPage() {
       router.replace('/admin/login');
       return;
     }
+
+    fetch('/api/analytics', {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${getBackendToken() || ''}` },
+    }).then(async (response) => {
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not load website analytics.');
+      setAnalytics(result as AnalyticsSummary);
+      setAnalyticsError('');
+    }).catch((error: unknown) => {
+      setAnalyticsError(error instanceof Error ? error.message : 'Could not load website analytics.');
+    });
 
     loadPublishedContent().then((content) => {
       setPackages(content.packages);
@@ -77,7 +92,7 @@ export default function AdminPage() {
     const data = new FormData();
     data.append('file', file);
     setMessage('Uploading image...');
-    const response = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: data });
+    const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${getBackendToken() || ''}` }, body: data });
     const result = (await response.json()) as { url?: string; error?: string };
     if (!response.ok || !result.url) {
       setMessage(result.error || 'Image upload failed.');
@@ -104,19 +119,19 @@ export default function AdminPage() {
     const nextItems = [...getCustomGalleryItems(), newItem];
     saveCustomGalleryItems(nextItems);
     const content = await loadPublishedContent();
-    const isPublished = await savePublishedContent({ packages, services, gallery: [...content.gallery, newItem], branches: content.branches }, ADMIN_PASSWORD);
+    const isPublished = await savePublishedContent({ packages, services, gallery: [...content.gallery, newItem], branches: content.branches });
     setItems([...defaultGalleryItems, ...content.gallery, newItem]);
     setForm(initialForm);
-    setMessage(isPublished ? 'New gallery item added successfully and is now visible in the public gallery.' : 'The photo was saved on this device, but could not be published.');
+    setMessage(isPublished ? 'New gallery item added successfully and is now visible in the public gallery.' : 'Could not publish the photo. Confirm admin login and configure Vercel Blob for deployed image uploads.');
   };
 
   const removeItem = async (id: string) => {
     const nextItems = getCustomGalleryItems().filter((item) => item.id !== id);
     saveCustomGalleryItems(nextItems);
     const content = await loadPublishedContent();
-    const isPublished = await savePublishedContent({ packages, services, gallery: content.gallery.filter((item) => item.id !== id), branches: content.branches }, ADMIN_PASSWORD);
+    const isPublished = await savePublishedContent({ packages, services, gallery: content.gallery.filter((item) => item.id !== id), branches: content.branches });
     setItems([...defaultGalleryItems, ...content.gallery.filter((item) => item.id !== id)]);
-    setMessage(isPublished ? 'Item removed from the public gallery.' : 'The item was removed on this device, but the public gallery could not be updated.');
+    setMessage(isPublished ? 'Item removed from the public gallery.' : 'The item was removed in this browser only. Confirm admin login and configure Upstash Redis to publish the change.');
   };
 
   const logout = () => {
@@ -136,10 +151,10 @@ export default function AdminPage() {
       branches,
       bannerImage: bannerImage || currentContent.bannerImage || '/images/Prewedding (21).jpg',
     };
-    const isPublished = await savePublishedContent(content, ADMIN_PASSWORD);
+    const isPublished = await savePublishedContent(content);
     setPackages(content.packages);
     setServices(content.services);
-    setMessage(isPublished ? 'Packages and services published successfully.' : 'Saved on this device. Connect Vercel shared storage to publish for everyone.');
+    setMessage(isPublished ? 'Packages and services published successfully.' : 'Saved in this browser only. Confirm admin login and configure Upstash Redis to publish changes for everyone.');
   };
 
   const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +167,7 @@ export default function AdminPage() {
     setIsBannerUploading(true);
     setMessage('Uploading studio banner image...');
     try {
-      const response = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: data });
+      const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${getBackendToken() || ''}` }, body: data });
       const result = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !result.url) {
         setMessage(result.error || 'Studio banner upload failed.');
@@ -178,8 +193,8 @@ export default function AdminPage() {
     setMessage('Saving studio banner...');
     try {
       const currentContent = await loadPublishedContent();
-      const isPublished = await savePublishedContent({ ...currentContent, bannerImage }, ADMIN_PASSWORD);
-      setMessage(isPublished ? 'Studio banner saved and published.' : 'Banner saved on this device, but could not be published for everyone.');
+      const isPublished = await savePublishedContent({ ...currentContent, bannerImage });
+      setMessage(isPublished ? 'Studio banner saved and published.' : 'Banner saved in this browser only. Confirm admin login and configure Upstash Redis to publish changes for everyone.');
     } catch {
       setMessage('Studio banner could not be saved. Check your connection and try again.');
     } finally {
@@ -196,7 +211,7 @@ export default function AdminPage() {
     data.append('file', file);
     setBranchMessage(`Uploading ${branchName} photo...`);
     try {
-      const response = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: data });
+      const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${getBackendToken() || ''}` }, body: data });
       const result = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !result.url) {
         setBranchMessage(result.error || `${branchName} photo upload failed.`);
@@ -216,8 +231,8 @@ export default function AdminPage() {
     setBranchMessage('Saving studio branch images...');
     try {
       const currentContent = await loadPublishedContent();
-      const isPublished = await savePublishedContent({ ...currentContent, branches }, ADMIN_PASSWORD);
-      setBranchMessage(isPublished ? 'Both studio branch images have been saved.' : 'Branch images were saved on this device, but could not be published for everyone.');
+      const isPublished = await savePublishedContent({ ...currentContent, branches });
+      setBranchMessage(isPublished ? 'Both studio branch images have been saved.' : 'Branch image settings were saved in this browser only. Confirm admin login and configure Upstash Redis to publish changes for everyone.');
     } catch {
       setBranchMessage('Studio branch images could not be saved. Check your connection and try again.');
     } finally {
@@ -226,11 +241,11 @@ export default function AdminPage() {
   };
 
   const restoreContent = async () => {
-    const isPublished = await resetPublishedContent(ADMIN_PASSWORD);
+    const isPublished = await resetPublishedContent();
     setPackages(defaultPackages);
     setServices(defaultServices);
     setBannerImage('');
-    setMessage(isPublished ? 'Packages and services restored for everyone.' : 'Restored on this device. Connect Vercel shared storage to publish for everyone.');
+    setMessage(isPublished ? 'Packages and services restored for everyone.' : 'Restored in this browser only. Confirm admin login and configure Upstash Redis to publish changes for everyone.');
   };
 
   if (!isReady) {
@@ -253,6 +268,30 @@ export default function AdminPage() {
       </div>
 
       <div className="page-content admin-panel">
+        <section className="admin-card analytics-card" aria-labelledby="analytics-heading">
+          <div>
+            <p className="eyebrow">Website traffic</p>
+            <h2 id="analytics-heading">Page views</h2>
+            <p className="form-note">Counts every public page opened, including visits from new and returning viewers.</p>
+          </div>
+          {analytics ? (
+            <>
+              <div className="analytics-headline">
+                <strong className="analytics-total">{analytics.totalViews.toLocaleString()}</strong>
+                <span>Total page views</span>
+              </div>
+              <div className="analytics-day-list" aria-label="Daily page views for the last 7 days">
+                {analytics.dailyViews.slice(-7).map((day) => (
+                  <div className="analytics-day" key={day.date}>
+                    <strong>{day.views.toLocaleString()}</strong>
+                    <span>{new Date(`${day.date}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : <p className="form-status" role="status">{analyticsError || 'Loading website traffic...'}</p>}
+        </section>
+
         <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
           <h2>Offers &amp; promotions</h2>
           <p>Create and publish homepage offers, upload promotional images, set dates, and copy shareable offer links.</p>

@@ -15,7 +15,7 @@ The app runs at `http://localhost:3000`.
 
 ## Deploy on Vercel
 
-Leave the Vercel **Root Directory** at the repository root, use the detected Next.js framework, and deploy from the `master` branch. The build and install commands are already configured in `vercel.json`.
+Leave the Vercel **Root Directory** at the repository root, use the detected Next.js framework, and deploy from the `main` branch. The build and install commands are already configured in `vercel.json`.
 
 ### Enable shared admin updates
 
@@ -28,13 +28,17 @@ Connect a Vercel Blob store to the same project so Vercel provides:
 
 - `BLOB_READ_WRITE_TOKEN`
 
-After connecting both integrations, redeploy the `master` branch. Gallery and branch photos are uploaded to Blob, while their published records are stored in Redis.
+After connecting both integrations, redeploy the `main` branch. Gallery and branch photos are uploaded to Blob, while their published records are stored in Redis.
+
+### View website traffic
+
+The site records a page view whenever a visitor opens a public page or moves to another page. The admin dashboard at `/admin` shows the all-time total and daily views for the last seven days. Local development stores the count in `data/site-analytics.json`; Vercel stores it in the connected Upstash Redis database, so configure both Upstash variables above and redeploy for production reporting.
 
 ### Manage offers
 
 Sign in at `/studio-login`, then open **Manage Offers** in the studio dashboard (or visit `/studio/offers`). Offers are stored in the same Upstash Redis database; uploaded offer images use Vercel Blob. In local development, offer records fall back to `data/offers.json` and images to `public/uploads`.
 
-The homepage's **Admin Login** and `/studio-login` both authenticate through the Next.js `/api/admin/login` route. Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a long random `JWT_SECRET` as server-side environment variables in `.env.local` for development and in Vercel's project settings for deployment (Production, and Preview too if needed). Redeploy after changing them. These values must not use the `NEXT_PUBLIC_` prefix. A deployment without any of the three returns a configuration error instead of accepting a password. Change the sample admin password before production use. Offer records are stored in Upstash Redis when `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured; local development falls back to `data/offers.json`. Vercel requires Redis because serverless local files do not persist. Offer images use Vercel Blob in production, so also configure `BLOB_READ_WRITE_TOKEN`.
+The homepage's **Admin Login** and `/studio-login` both authenticate through the Next.js `/api/admin/login` route. Set `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and a long random `JWT_SECRET` as server-side environment variables in `.env.local` for development and in Vercel's project settings for deployment (Production, and Preview too if needed). Redeploy after changing them. These values must not use the `NEXT_PUBLIC_` prefix. A deployment without any of the three returns a configuration error instead of accepting a password. Change the sample admin password before production use. Admin saves use the signed login token. Offer records, site content, and page-view counts use Upstash Redis; local development falls back to files. Vercel requires Redis because serverless local files do not persist. Image uploads use Vercel Blob in production, so also configure `BLOB_READ_WRITE_TOKEN`.
 
 ## Project Structure
 

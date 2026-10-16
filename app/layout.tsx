@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteChatbot } from '@/components/site-chatbot';
+import { SiteAnalyticsTracker } from '@/components/site-analytics-tracker';
 import { SiteThemeProvider } from '@/components/site-theme-provider';
 
 export const metadata: Metadata = {
@@ -39,9 +40,9 @@ const organizationJsonLd = {
   url: 'https://www.smphotography.co.in',
   logo: {
     '@type': 'ImageObject',
-    url: 'https://www.smphotography.co.in/favicon.png',
-    width: 512,
-    height: 512,
+    url: 'https://www.smphotography.co.in/logo.png',
+    width: 2456,
+    height: 1208,
   },
   telephone: '+91 95118 35507',
   address: [
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
+        <SiteAnalyticsTracker />
         <SiteThemeProvider>
           <SiteHeader />
           <main>{children}</main>
