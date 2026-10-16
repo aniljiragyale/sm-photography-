@@ -40,7 +40,7 @@ export default function AboutPage() {
         <div className="page-actions page-actions-top">
           <Link href="/" className="page-back back-icon" aria-label="Back to home" title="Back to home"><span aria-hidden="true">←</span></Link>
         </div>
-        <p className="eyebrow">About the artist</p>
+        <p className="eyebrow">Meet your photographer</p>
         <h1>About Me</h1>
       </div>
 
@@ -57,21 +57,21 @@ export default function AboutPage() {
           </div>
 
           <div className="about-intro-copy">
-            <h2>Capturing life with feeling</h2>
+            <h2>I believe every photograph should make you feel something.</h2>
             <p>
-              I am Satish Molekar, a photographer based in Malgaon, Sangli district. I built SM Photography around a simple idea: photographs should preserve the feelings, stories, and connections behind every important moment.
+              I’m Satish Molekar, the photographer behind SM Photography &amp; Films. My journey began in Malgaon, where I learned that the most memorable photographs are about more than how a moment looks: they hold the joy, the people, and the feeling you want to remember.
             </p>
             <p>
-              Whether it is a grand wedding, an intimate maternity shoot, a stylish modeling portfolio, or candid life moments, I bring a unique blend of creativity, professionalism, and attention to detail to every frame.
+              That belief guides every wedding story, maternity portrait, event, and personal shoot I create. I take time to understand what matters to you, then bring together thoughtful direction and an eye for honest, meaningful moments.
             </p>
             <p>
-              I believe great photography isn’t only about the camera — it’s about understanding people, building trust, and creating a comfortable space where they can be themselves.
+              I look for the little moments around the big ones: a proud glance, a shared laugh, or the details a family chose with care. Those are the frames that make a gallery feel like your story.
             </p>
             <p>
-              Every photograph we create is shaped with heart, precision, and artistic intention so your memories remain timeless.
+              A camera can record a moment; connection is what makes a photograph feel alive. I want you to feel comfortable, be yourself, and look back at your pictures years from now with the same warmth you felt that day.
             </p>
             <p>
-              As the studio grew, I opened a second SM Photography &amp; Films branch in Miraj. Clients can now connect with our team in both Malgaon and Miraj for weddings, maternity portraits, events, and other photography sessions.
+              From our home studio in Malgaon to our second branch in Miraj, my team and I bring that same care to every celebration and every family we photograph. Thank you for trusting us with the moments that matter to you.
             </p>
           </div>
         </div>
@@ -87,8 +87,8 @@ export default function AboutPage() {
 
         <section className="branch-section">
           <p className="eyebrow">Visit our studios</p>
-          <h2>Two studio locations, one creative team</h2>
-          <p className="branch-section-intro">Choose the location that works best for you. Open a map for directions or contact us to plan your session.</p>
+          <h2>Find us in Malgaon and Miraj</h2>
+          <p className="branch-section-intro">SM Photography &amp; Films welcomes you at two branches: our original studio in Malgaon, Sangli district, and our second studio in Miraj. Choose a location below for directions and get in touch to plan your session.</p>
           <div className="branch-grid">
             {branches.map((branch, index) => (
               <article className="branch-card animated-card" key={branch.id} style={{ animationDelay: `${index * 100}ms` }}>

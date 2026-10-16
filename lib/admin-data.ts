@@ -75,7 +75,7 @@ export const defaultBranches: BranchItem[] = [
     name: 'SM Photo Studio & Films - Malgaon',
     address: 'Malgaon, Sangli District, Maharashtra, India',
     locationUrl: 'https://maps.app.goo.gl/AwgoQrcp92duJkoT6',
-    description: 'Our original studio branch for weddings, portraits, films, and creative sessions.',
+    description: 'Our home studio in Malgaon, Sangli district. Visit us for wedding photography and films, portraits, maternity sessions, and family celebrations.',
     image: '/images/Wedding (34).JPG',
   },
   {
@@ -83,7 +83,7 @@ export const defaultBranches: BranchItem[] = [
     name: 'SM Photo Studio & Films - Miraj',
     address: 'Miraj, Maharashtra, India',
     locationUrl: 'https://share.google/ZnDunM3nDt7smSKDr',
-    description: 'Our second branch serving clients across Miraj, Sangli, and Miraj Kupwad.',
+    description: 'Our second studio, bringing SM Photography & Films to Miraj and nearby Sangli and Miraj Kupwad. Visit us for weddings, portraits, maternity sessions, and events.',
     image: '/images/Prewedding (23).jpg',
   },
 ];
