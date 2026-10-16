@@ -25,8 +25,9 @@ export function SiteHeader() {
       <div className="site-header-inner">
         <Link href="/" className="brand" aria-label="SM Photography home">
           <span className="brand-mark">
-            <img src="/logo.png" alt="Satish Molekar Photography logo" width="2456" height="1208" fetchPriority="high" />
+            <img src="/favicon.png" alt="SM Photography logo" width="512" height="512" fetchPriority="high" />
           </span>
+          <span className="brand-text">SM PHOTOGRAPHY</span>
         </Link>
 
         <div className="nav-wrap">
