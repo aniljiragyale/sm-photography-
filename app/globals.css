@@ -2329,9 +2329,12 @@ textarea.form-field {
 
   .package-card,
   .service-card-plain,
-  .info-card,
-  .branch-card {
+  .info-card {
     padding: 1rem;
+  }
+
+  .branch-card {
+    padding: 0;
   }
 
   .package-card .price {

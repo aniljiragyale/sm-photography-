@@ -202,14 +202,15 @@ export default function AdminPage() {
     }
   };
 
-  const handleBranchUpload = async (event: React.ChangeEvent<HTMLInputElement>, index: number, branchName: string) => {
+  const handleBranchUpload = async (event: React.ChangeEvent<HTMLInputElement>, branchId: string, branchName: string) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
 
     const data = new FormData();
     data.append('file', file);
-    setBranchMessage(`Uploading ${branchName} photo...`);
+    setIsBranchesSaving(true);
+    setBranchMessage(`Uploading the ${branchName} photo...`);
     try {
       const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${getBackendToken() || ''}` }, body: data });
       const result = (await response.json()) as { url?: string; error?: string };
@@ -217,11 +218,18 @@ export default function AdminPage() {
         setBranchMessage(result.error || `${branchName} photo upload failed.`);
         return;
       }
-      setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, image: result.url || '' } : entry));
-      setBranchMessage(`${branchName} photo uploaded. Select Save branch images to publish both photos.`);
+      const updatedBranches = branches.map((entry) => entry.id === branchId ? { ...entry, image: result.url || '' } : entry);
+      setBranches(updatedBranches);
+      setBranchMessage(`Publishing the ${branchName} photo to the About page...`);
+      const currentContent = await loadPublishedContent();
+      const isPublished = await savePublishedContent({ ...currentContent, branches: updatedBranches });
+      setBranchMessage(isPublished
+        ? `${branchName} photo is saved and published in its branch card on the About page.`
+        : `${branchName} photo uploaded, but publishing failed. Confirm the Upstash Redis settings in Vercel and try again.`);
     } catch {
       setBranchMessage(`${branchName} photo upload failed. Check your connection and try again.`);
     } finally {
+      setIsBranchesSaving(false);
       input.value = '';
     }
   };
@@ -232,7 +240,7 @@ export default function AdminPage() {
     try {
       const currentContent = await loadPublishedContent();
       const isPublished = await savePublishedContent({ ...currentContent, branches });
-      setBranchMessage(isPublished ? 'Both studio branch images have been saved.' : 'Branch image settings were saved in this browser only. Confirm admin login and configure Upstash Redis to publish changes for everyone.');
+      setBranchMessage(isPublished ? 'Branch details saved and published.' : 'Branch details could not be published. Confirm admin login and configure Upstash Redis.');
     } catch {
       setBranchMessage('Studio branch images could not be saved. Check your connection and try again.');
     } finally {
@@ -460,10 +468,10 @@ export default function AdminPage() {
             </div>
 
             <h3 className="admin-section-title">Studio branch banner images</h3>
-            <p className="form-note">Upload one photo for each branch, then save both together. These photos appear on the About page.</p>
+            <p className="form-note">Each uploaded photo is published automatically to its matching branch card on the About page. Save below after editing branch names, addresses, links, or descriptions.</p>
             <div className="admin-actions">
               <button type="button" className="submit-btn" onClick={saveBranchImages} disabled={isBranchesSaving}>
-                {isBranchesSaving ? 'Saving branch images...' : 'Save branch images'}
+                {isBranchesSaving ? 'Saving branch details...' : 'Save branch details'}
               </button>
             </div>
             {branchMessage ? <p className="form-status" role="status">{branchMessage}</p> : null}
@@ -476,10 +484,10 @@ export default function AdminPage() {
                   <label>Description<textarea className="field" rows={3} value={branch.description} onChange={(event) => setBranches((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, description: event.target.value } : entry))} /></label>
                   {branch.image ? <img className="branch-admin-preview" src={branch.image} alt={`${branch.name} banner preview`} /> : <p className="form-note">No branch image selected.</p>}
                   <div className="upload-row">
-                    <button type="button" className="btn btn-secondary upload-button" onClick={() => document.getElementById(`branch-upload-${branch.id}`)?.click()}>
-                      Upload {branch.name} photo
+                    <button type="button" className="btn btn-secondary upload-button" onClick={() => document.getElementById(`branch-upload-${branch.id}`)?.click()} disabled={isBranchesSaving}>
+                      {isBranchesSaving ? 'Publishing image...' : `Upload ${branch.name} photo`}
                     </button>
-                    <input id={`branch-upload-${branch.id}`} type="file" accept="image/*" hidden onChange={(event) => handleBranchUpload(event, index, branch.name)} />
+                    <input id={`branch-upload-${branch.id}`} type="file" accept="image/*" hidden onChange={(event) => handleBranchUpload(event, branch.id, branch.name)} />
                   </div>
                 </div>
               ))}
