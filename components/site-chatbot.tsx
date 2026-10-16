@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useSiteTheme } from '@/components/site-theme-provider';
 
 type SiteContent = {
-  packages?: Array<{ name: string; items?: string[] }>;
+  packages?: Array<{ name: string; price?: string; items?: string[] }>;
   services?: Array<{ title: string; description: string; deliverables: string }>;
   branches?: Array<{ name: string; address: string; description?: string; locationUrl: string }>;
   gallery?: Array<{ title: string; category: string; description?: string }>;
@@ -35,16 +35,26 @@ const chatCopy = {
     welcome: 'Hi! Ask about Satish, packages, services, bookings, or studio locations.',
     greeting: 'Hello! I’m the SM Photography & Films assistant. What can I help you with today?',
     owner: 'Satish Molekar is the photographer and creative lead behind SM Photography & Films. He brings extensive hands-on experience across weddings, maternity portraits, events, modeling portfolios, and candid photography, with an approach built around personal stories, thoughtful direction, and making clients feel comfortable. The studio serves clients from its Malgaon and Miraj branches.',
-    packageOne: (name: string, items: string[]) => `${name}${items.length ? ` includes:\n${items.map((item) => `• ${item}`).join('\n')}` : ' is available'}. The website asks clients to enquire for current pricing and availability.`,
+    packageOne: (name: string, items: string[], price?: string) => `${name}${price ? ` (${price})` : ''}${items.length ? ` includes:\n${items.map((item) => `• ${item}`).join('\n')}` : ' is available'}. The website asks clients to enquire for current availability.`,
     packageList: (list: string) => `SM Photography offers these packages:\n${list}\nThe website asks clients to enquire for current pricing and availability.`,
     packageMissing: 'Tell me which package you are considering and I can share its details. For a quote, contact Satish on WhatsApp or call +91 95118 35507.',
     serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description} What you receive: ${deliverables}`,
     serviceList: (list: string) => `SM Photography offers ${list}. Tell me which one you have in mind and I’ll explain what it includes. You can also contact Satish on WhatsApp for a tailored quote.`,
+    serviceUnknown: 'Please view the services page for the complete list of current services.',
+    otherService: 'Other services',
+    otherPackage: 'Other package',
+    priceLabel: 'Price',
+    otherBranch: 'Other branch',
     baby: 'The site does not list dedicated baby or newborn session details yet. The studio can confirm options, styling, and availability directly.',
     maternity: 'Maternity photography is available, with gentle direction and styling guidance. Dress inventory is not listed, so please ask the studio about wardrobe options.',
     booking: 'I can’t view the live calendar, so I can’t confirm an open date. Send a booking request and the team can check availability.',
     gallery: 'The public portfolio is on the Gallery page. Private client galleries are separate and need the access details shared by the studio.',
     locations: (list: string) => `The studio locations listed on the site are:\n${list}`,
+    locationsLocalized: 'The studio has branches in Malgaon and Miraj. Use a map link for the exact address.',
+    offersAvailable: 'Current photography offers are listed on the Offers page. Open it to see the latest offer details.',
+    noOffers: 'There are no current offers listed on the website. Contact the studio to ask about current promotions.',
+    offersLink: 'View offers',
+    map: 'Map',
     contact: 'You can call SM Photography & Films at +91 95118 35507 or email smphotography5207@gmail.com.',
     fallback: (question: string) => `Thanks for asking about “${question}”. I can help with photography services, packages, bookings, and locations. For a personal answer, message Satish directly.`,
     ask: 'Ask a question...',
@@ -73,6 +83,7 @@ const chatCopy = {
     enquiry: 'Send an enquiry',
     wardrobe: 'Maternity details',
     which: 'Which service interests you?',
+    overview: (services: string, packages: string, branches: string, offers: string) => `Here is a summary of SM Photography & Films:\nPhotographer: Satish Molekar, with experience in weddings, maternity, events, portraits, modeling, and candid photography.\nServices: ${services}\nPackages: ${packages}\nStudio branches: ${branches}\n${offers}\nCall +91 95118 35507 or email smphotography5207@gmail.com for details.`,
     themeLabel: 'Appearance',
     lightMode: 'Light',
     darkMode: 'Dark',
@@ -83,17 +94,27 @@ const chatCopy = {
     suggestions: 'सुझाव वाले सवाल',
     welcome: 'नमस्ते! सतीश जी, पैकेज, सेवाओं, बुकिंग या स्टूडियो के पते के बारे में पूछें।',
     greeting: 'नमस्ते! मैं SM Photography & Films का सहायक हूँ। आज मैं आपकी किस तरह मदद कर सकता हूँ?',
-    owner: 'SM Photography & Films के मालिक और फ़ोटोग्राफ़र सतीश मोलेकर हैं। उनका स्टूडियो मालगांव, सांगली में है। वे शादी, मैटरनिटी, मॉडलिंग और कैंडिड फ़ोटोग्राफ़ी करते हैं। उनका प्रोफ़ाइल रचनात्मकता, बारीकी और सहज ग्राहक अनुभव पर ज़ोर देता है।',
-    packageOne: (name: string, _items: string[] = []) => `${name} उपलब्ध है। पैकेज की जानकारी, कीमत और उपलब्धता के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।`,
+    owner: 'SM Photography & Films के मालिक और फ़ोटोग्राफ़र सतीश मोलेकर हैं। स्टूडियो की शाखाएँ मालगांव और मिरज में हैं। वे शादी, मैटरनिटी, मॉडलिंग और कैंडिड फ़ोटोग्राफ़ी करते हैं। उनका काम रचनात्मकता, बारीकी और सहज ग्राहक अनुभव पर केंद्रित है।',
+    packageOne: (name: string, items: string[] = [], price?: string) => `${name}${price ? ` — कीमत ${price}` : ' उपलब्ध है'}${items.length ? `। इसमें शामिल हैं: ${items.map((item) => localizePackageItem(item, 'hi')).join('، ')}` : ''}। कीमत और उपलब्धता के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।`,
     packageList: (list: string) => `SM Photography के पैकेज:\n${list}\nकीमत और उपलब्धता के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।`,
     packageMissing: 'आप किस पैकेज के बारे में जानना चाहते हैं? जानकारी और कोटेशन के लिए सतीश जी को WhatsApp करें या +91 95118 35507 पर कॉल करें।',
-    serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description} आपको मिलेगा: ${deliverables}`,
+    serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description}${deliverables ? ` आपको मिलेगा: ${deliverables}` : ''}`,
     serviceList: (list: string) => `SM Photography की सेवाएँ हैं: ${list}। बताइए आपको किस सेवा की जानकारी चाहिए। खास कोटेशन के लिए सतीश जी से WhatsApp पर बात करें।`,
+    serviceUnknown: 'पूरी और ताज़ा सेवा सूची देखने के लिए सेवाएँ पेज खोलें।',
+    otherService: 'अन्य सेवाएँ',
+    otherPackage: 'अन्य पैकेज',
+    priceLabel: 'कीमत',
+    otherBranch: 'अन्य शाखा',
     baby: 'वेबसाइट पर बेबी या न्यूबॉर्न फ़ोटोग्राफ़ी की अलग जानकारी अभी उपलब्ध नहीं है। विकल्प, स्टाइलिंग और तारीख़ के लिए स्टूडियो से पूछें।',
     maternity: 'मातृत्व फ़ोटोग्राफ़ी उपलब्ध है; इसमें सहज मार्गदर्शन और स्टाइलिंग सलाह शामिल है। ड्रेस उपलब्धता की जानकारी प्रकाशित नहीं है, इसलिए स्टूडियो से पूछें।',
     booking: 'मैं लाइव कैलेंडर नहीं देख सकता, इसलिए तारीख़ की उपलब्धता पक्की नहीं कर सकता। बुकिंग अनुरोध भेजें, टीम तारीख़ जाँच लेगी।',
-    gallery: 'सार्वजनिक फ़ोटो गैलरी, Gallery पेज पर है। निजी क्लाइंट गैलरी अलग होती है और उसे खोलने के लिए स्टूडियो से मिले एक्सेस विवरण चाहिए।',
+    gallery: 'सार्वजनिक फ़ोटो गैलरी वेबसाइट के गैलरी पेज पर है। निजी क्लाइंट गैलरी अलग होती है और उसे खोलने के लिए स्टूडियो से मिले एक्सेस विवरण चाहिए।',
     locations: (list: string) => `वेबसाइट पर स्टूडियो के ये पते दिए गए हैं:\n${list}`,
+    locationsLocalized: 'स्टूडियो की शाखाएँ मालगांव और मिरज में हैं। सटीक पते के लिए मैप लिंक खोलें।',
+    offersAvailable: 'फोटोग्राफी के मौजूदा ऑफ़र वेबसाइट के ऑफ़र पेज पर दिए गए हैं। नवीनतम जानकारी के लिए वह पेज खोलें।',
+    noOffers: 'वेबसाइट पर अभी कोई मौजूदा ऑफ़र नहीं दिया गया है। प्रमोशन की जानकारी के लिए स्टूडियो से संपर्क करें।',
+    offersLink: 'ऑफ़र देखें',
+    map: 'मैप',
     contact: 'SM Photography & Films को +91 95118 35507 पर कॉल करें या smphotography5207@gmail.com पर ईमेल करें।',
     fallback: (question: string) => `“${question}” के लिए धन्यवाद। मैं सेवाओं, पैकेज, बुकिंग और लोकेशन की जानकारी दे सकता हूँ। व्यक्तिगत जवाब के लिए सतीश जी को संदेश भेजें।`,
     ask: 'अपना सवाल लिखें...',
@@ -122,6 +143,7 @@ const chatCopy = {
     enquiry: 'पूछताछ भेजें',
     wardrobe: 'मातृत्व की जानकारी',
     which: 'कौन-सी सेवा चाहिए?',
+    overview: (services: string, packages: string, branches: string, offers: string) => `SM Photography & Films की जानकारी:\nफ़ोटोग्राफ़र: सतीश मोलेकर; शादी, मातृत्व, इवेंट, पोर्ट्रेट, मॉडलिंग और कैंडिड फ़ोटोग्राफ़ी का अनुभव।\nसेवाएँ: ${services}\nपैकेज: ${packages}\nस्टूडियो शाखाएँ: ${branches}\n${offers}\nजानकारी के लिए +91 95118 35507 पर कॉल करें या smphotography5207@gmail.com पर ईमेल करें।`,
     themeLabel: 'दिखावट',
     lightMode: 'लाइट',
     darkMode: 'डार्क',
@@ -132,17 +154,27 @@ const chatCopy = {
     suggestions: 'सुचवलेले प्रश्न',
     welcome: 'नमस्कार! सतीश, पॅकेज, सेवा, बुकिंग किंवा स्टुडिओच्या पत्त्याबद्दल विचारा.',
     greeting: 'नमस्कार! मी SM Photography & Films चा सहाय्यक आहे. आज मी तुम्हाला कशी मदत करू?',
-    owner: 'SM Photography & Films चे मालक आणि छायाचित्रकार सतीश मोळेकर आहेत. त्यांचा स्टुडिओ मालगाव, सांगली येथे आहे. ते लग्न, मॅटर्निटी, मॉडेलिंग आणि कॅन्डिड छायाचित्रण करतात. त्यांच्या प्रोफाइलमध्ये सर्जनशीलता, बारकावे आणि ग्राहकांचा सहज अनुभव यावर भर आहे.',
-    packageOne: (name: string, _items: string[] = []) => `${name} उपलब्ध आहे. पॅकेजचे तपशील, किंमत आणि उपलब्धतेसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.`,
+    owner: 'SM Photography & Films चे मालक आणि छायाचित्रकार सतीश मोळेकर आहेत. स्टुडिओच्या शाखा मालगाव आणि मिरज येथे आहेत. ते लग्न, मॅटर्निटी, मॉडेलिंग आणि कॅन्डिड छायाचित्रण करतात. त्यांच्या कामात सर्जनशीलता, बारकावे आणि ग्राहकांचा सहज अनुभव यावर भर आहे.',
+    packageOne: (name: string, items: string[] = [], price?: string) => `${name}${price ? ` — किंमत ${price}` : ' उपलब्ध आहे'}${items.length ? `. यामध्ये: ${items.map((item) => localizePackageItem(item, 'mr')).join(', ')}` : ''}. किंमत आणि उपलब्धतेसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.`,
     packageList: (list: string) => `SM Photography ची पॅकेजेस:\n${list}\nकिंमत आणि उपलब्धतेसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.`,
     packageMissing: 'कोणत्या पॅकेजबद्दल जाणून घ्यायचे आहे? माहितीसाठी सतीश यांना WhatsApp करा किंवा +91 95118 35507 वर कॉल करा.',
-    serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description} तुम्हाला मिळेल: ${deliverables}`,
+    serviceOne: (name: string, description: string, deliverables: string) => `${name}: ${description}${deliverables ? ` तुम्हाला मिळेल: ${deliverables}` : ''}`,
     serviceList: (list: string) => `SM Photography च्या सेवा: ${list}. कोणत्या सेवेची माहिती हवी आहे ते सांगा. खास कोटेशनसाठी सतीश यांच्याशी WhatsApp वर बोला.`,
+    serviceUnknown: 'सर्व सेवा पाहण्यासाठी सेवा पेज उघडा.',
+    otherService: 'इतर सेवा',
+    otherPackage: 'इतर पॅकेज',
+    priceLabel: 'किंमत',
+    otherBranch: 'इतर शाखा',
     baby: 'वेबसाइटवर बेबी किंवा नवजात बाळांच्या छायाचित्रणाचे स्वतंत्र तपशील सध्या नाहीत. पर्याय, सजावट आणि उपलब्ध तारखांसाठी स्टुडिओशी संपर्क साधा.',
     maternity: 'मॅटर्निटी छायाचित्रण उपलब्ध आहे; यामध्ये सहज मार्गदर्शन आणि स्टाइलिंगविषयी मदत मिळते. ड्रेस उपलब्धतेची माहिती दिलेली नाही, त्यामुळे स्टुडिओला विचारा.',
     booking: 'मला थेट बुकिंग कॅलेंडर पाहता येत नाही, त्यामुळे तारीख निश्चित सांगता येणार नाही. बुकिंग विनंती पाठवा; टीम उपलब्धता तपासेल.',
-    gallery: 'सार्वजनिक फोटो गॅलरी Gallery पेजवर आहे. खाजगी क्लायंट गॅलरी वेगळी असून प्रवेशासाठी स्टुडिओने दिलेली माहिती आवश्यक आहे.',
+    gallery: 'सार्वजनिक फोटो गॅलरी वेबसाइटच्या गॅलरी पेजवर आहे. खाजगी क्लायंट गॅलरी वेगळी असून प्रवेशासाठी स्टुडिओने दिलेली माहिती आवश्यक आहे.',
     locations: (list: string) => `वेबसाइटवर स्टुडिओची ही ठिकाणे दिली आहेत:\n${list}`,
+    locationsLocalized: 'स्टुडिओच्या शाखा मालगाव आणि मिरज येथे आहेत. अचूक पत्त्यासाठी नकाशाची लिंक उघडा.',
+    offersAvailable: 'फोटोग्राफीचे सध्याचे ऑफर्स वेबसाइटच्या ऑफर्स पेजवर आहेत. ताज्या माहितीसाठी ते पेज उघडा.',
+    noOffers: 'वेबसाइटवर सध्या कोणतेही ऑफर दिलेले नाही. प्रमोशनच्या माहितीसाठी स्टुडिओशी संपर्क साधा.',
+    offersLink: 'ऑफर्स पहा',
+    map: 'नकाशा',
     contact: 'SM Photography & Films ला +91 95118 35507 वर कॉल करा किंवा smphotography5207@gmail.com वर ईमेल करा.',
     fallback: (question: string) => `“${question}” बद्दल धन्यवाद. सेवा, पॅकेज, बुकिंग आणि ठिकाणांची माहिती मी देऊ शकतो. वैयक्तिक उत्तरासाठी सतीश यांना संदेश पाठवा.`,
     ask: 'तुमचा प्रश्न लिहा...',
@@ -171,6 +203,7 @@ const chatCopy = {
     enquiry: 'चौकशी पाठवा',
     wardrobe: 'मॅटर्निटी तपशील',
     which: 'कोणती सेवा हवी आहे?',
+    overview: (services: string, packages: string, branches: string, offers: string) => `SM Photography & Films ची माहिती:\nछायाचित्रकार: सतीश मोळेकर; लग्न, मॅटर्निटी, कार्यक्रम, पोर्ट्रेट, मॉडेलिंग आणि कॅन्डिड छायाचित्रणाचा अनुभव.\nसेवा: ${services}\nपॅकेजेस: ${packages}\nस्टुडिओच्या शाखा: ${branches}\n${offers}\nमाहितीसाठी +91 95118 35507 वर कॉल करा किंवा smphotography5207@gmail.com वर ईमेल करा.`,
     themeLabel: 'दिसणे',
     lightMode: 'लाइट',
     darkMode: 'डार्क',
@@ -185,6 +218,42 @@ const packageNames: Record<string, Record<ChatLanguage, string>> = {
   'pre wedding package': { en: 'Pre-Wedding Package', hi: 'प्री-वेडिंग पैकेज', mr: 'प्री-वेडिंग पॅकेज' },
   'maternity package': { en: 'Maternity Package', hi: 'मैटरनिटी पैकेज', mr: 'मॅटर्निटी पॅकेज' },
 };
+
+const packageItemNames: Record<string, Record<'hi' | 'mr', string>> = {
+  'traditional photographer': { hi: 'पारंपरिक फ़ोटोग्राफ़र', mr: 'पारंपरिक छायाचित्रकार' },
+  'traditional videographer': { hi: 'पारंपरिक वीडियोग्राफ़र', mr: 'पारंपरिक व्हिडिओग्राफर' },
+  'candid photographer': { hi: 'कैंडिड फ़ोटोग्राफ़र', mr: 'कॅन्डिड छायाचित्रकार' },
+  'candid photography': { hi: 'कैंडिड फ़ोटोग्राफ़ी', mr: 'कॅन्डिड छायाचित्रण' },
+  'cinematic videographer': { hi: 'सिनेमैटिक वीडियोग्राफ़र', mr: 'सिनेमॅटिक व्हिडिओग्राफर' },
+  'cinematic videography drone': { hi: 'सिनेमैटिक वीडियोग्राफ़ी और ड्रोन', mr: 'सिनेमॅटिक व्हिडिओग्राफी आणि ड्रोन' },
+  '20 page photobook album': { hi: '20 पेज का फ़ोटोबुक एल्बम', mr: '20 पानांचा फोटोबुक अल्बम' },
+  '25 page photobook album': { hi: '25 पेज का फ़ोटोबुक एल्बम', mr: '25 पानांचा फोटोबुक अल्बम' },
+  '30 page photobook album': { hi: '30 पेज का फ़ोटोबुक एल्बम', mr: '30 पानांचा फोटोबुक अल्बम' },
+  '12x36 nt hd photobook album': { hi: '12×36 NT HD फ़ोटोबुक एल्बम', mr: '12×36 NT HD फोटोबुक अल्बम' },
+  'video editing and reels': { hi: 'वीडियो एडिटिंग और रील्स', mr: 'व्हिडिओ एडिटिंग आणि रील्स' },
+  'video editing with highlights reel': { hi: 'हाइलाइट्स और रील के साथ वीडियो एडिटिंग', mr: 'हायलाइट्स आणि रीलसह व्हिडिओ एडिटिंग' },
+  'video editing with highlights reel reel': { hi: 'हाइलाइट्स और रील के साथ वीडियो एडिटिंग', mr: 'हायलाइट्स आणि रीलसह व्हिडिओ एडिटिंग' },
+  'video editing with highlights reel plus reel': { hi: 'हाइलाइट्स और रील के साथ वीडियो एडिटिंग', mr: 'हायलाइट्स आणि रीलसह व्हिडिओ एडिटिंग' },
+  'teaser video reel highlight 4k full hd video': { hi: 'टीज़र वीडियो, रील और हाइलाइट (4K / Full HD वीडियो)', mr: 'टीझर व्हिडिओ, रील आणि हायलाइट (4K / Full HD व्हिडिओ)' },
+  'teaser video reel highlight 4k full hd video video': { hi: 'टीज़र वीडियो, रील और हाइलाइट (4K / Full HD वीडियो)', mr: 'टीझर व्हिडिओ, रील आणि हायलाइट (4K / Full HD व्हिडिओ)' },
+  'unlimited photos': { hi: 'असीमित फ़ोटो', mr: 'अमर्यादित फोटो' },
+};
+
+function localizePackageItem(item: string, language: ChatLanguage) {
+  if (language === 'en') return item;
+  return packageItemNames[normalizeText(item)]?.[language] || (language === 'hi' ? 'पैकेज में शामिल सेवा' : 'पॅकेजमधील सेवा');
+}
+function localizeOffer(offer: NonNullable<SiteContent['offers']>[number], language: ChatLanguage) {
+  if (/maternity/i.test(offer.title) && language === 'hi') {
+    return `मातृत्व फ़ोटोग्राफ़ी के पैकेज:\nबेसिक — ₹3,000: 10 एडिट की हुई फ़ोटो, 1 सिनेमैटिक रील, 1 पोशाक।\nप्रीमियम — ₹5,000: 15 एडिट की हुई फ़ोटो, 1 सिनेमैटिक रील, 2 पोशाकें।\nप्रीमियम प्लस — ₹7,000: 15 एडिट की हुई फ़ोटो, 1 सिनेमैटिक रील, 2 पोशाकें, पेशेवर मेकअप और हेयरस्टाइल।\nलक्ज़री — ₹10,000: 15 एडिट की हुई फ़ोटो, 1 सिनेमैटिक रील, प्रीमियम एल्बम, 2 पोशाकें, पेशेवर मेकअप और हेयरस्टाइल।\nआरामदायक और सुरक्षित अनुभव के लिए सतीश जी से संपर्क करें।`;
+  }
+  if (/maternity/i.test(offer.title) && language === 'mr') {
+    return `मॅटर्निटी छायाचित्रण पॅकेजेस:\nबेसिक — ₹3,000: एडिट केलेले 10 फोटो, 1 सिनेमॅटिक रील, 1 पोशाख।\nप्रीमियम — ₹5,000: एडिट केलेले 15 फोटो, 1 सिनेमॅटिक रील, 2 पोशाख।\nप्रीमियम प्लस — ₹7,000: एडिट केलेले 15 फोटो, 1 सिनेमॅटिक रील, 2 पोशाख, व्यावसायिक मेकअप आणि हेअरस्टाइल।\nलक्झरी — ₹10,000: एडिट केलेले 15 फोटो, 1 सिनेमॅटिक रील, प्रीमियम अल्बम, 2 पोशाख, व्यावसायिक मेकअप आणि हेअरस्टाइल।\nआरामदायी आणि सुरक्षित अनुभवासाठी सतीश यांच्याशी संपर्क साधा.`;
+  }
+  return language === 'hi'
+    ? 'वेबसाइट पर एक नया फ़ोटोग्राफ़ी ऑफ़र उपलब्ध है। पूरी जानकारी के लिए ऑफ़र पेज देखें या स्टूडियो से संपर्क करें।'
+    : 'वेबसाइटवर नवीन फोटोग्राफी ऑफर उपलब्ध आहे. संपूर्ण माहितीसाठी ऑफर पेज पहा किंवा स्टुडिओशी संपर्क साधा.';
+}
 
 const servicesByName: Record<string, { aliases: string[]; names: Record<ChatLanguage, string>; details: Record<ChatLanguage, string> }> = {
   'wedding shoot': {
@@ -235,7 +304,31 @@ const servicesByName: Record<string, { aliases: string[]; names: Record<ChatLang
 };
 
 function localizePackageName(name: string, language: ChatLanguage) {
-  return packageNames[normalizeText(name)]?.[language] || name;
+  const localized = packageNames[normalizeText(name)]?.[language];
+  return localized || (language === 'en' ? name : chatCopy[language].otherPackage);
+}
+
+function findServiceDetails(name: string) {
+  const normalized = normalizeText(name);
+  return Object.entries(servicesByName).find(([key, service]) =>
+    normalized === normalizeText(key) || normalized === normalizeText(service.names.en)
+  )?.[1];
+}
+
+function localizeServiceName(name: string, language: ChatLanguage) {
+  if (language === 'en') return name;
+  return findServiceDetails(name)?.names[language] || chatCopy[language].otherService;
+}
+
+function localizeBranchName(name: string, language: ChatLanguage) {
+  if (language === 'en') return name.replace('SM Photo Studio & Films - ', '');
+  if (/miraj|मिरज/i.test(name)) return language === 'hi' ? 'मिरज' : 'मिरज';
+  if (/malgaon|मालग/i.test(name)) return language === 'hi' ? 'मालगांव' : 'मालगाव';
+  return chatCopy[language].otherBranch;
+}
+
+function branchesForLanguage(branches: NonNullable<SiteContent['branches']>, language: ChatLanguage) {
+  return [...new Set(branches.map((branch) => localizeBranchName(branch.name, language)))].join(' · ');
 }
 
 function playReplyTone(audioContext: AudioContext | null) {
@@ -297,7 +390,7 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   if (mentionedPackage) {
     const packageName = localizePackageName(mentionedPackage.name, language);
     return {
-      text: copy.packageOne(packageName, mentionedPackage.items || []),
+      text: copy.packageOne(packageName, mentionedPackage.items || [], mentionedPackage.price),
       links: [
         { label: copy.packages, href: '/package' },
         { label: copy.whatsapp, href: whatsappLink(`Hello, please share current details for the ${mentionedPackage.name}.`) },
@@ -306,24 +399,42 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   }
 
   if (asksAboutPackages) {
-    const list = packages.map((item) => `${localizePackageName(item.name, language)}${item.items?.length ? `: ${item.items.join(', ')}` : ''}`).join('\n');
+    const list = packages.map((item) => {
+      const details = (item.items || []).map((detail) => localizePackageItem(detail, language)).join(', ');
+      return `${localizePackageName(item.name, language)}${item.price ? ` — ${copy.priceLabel}: ${item.price}` : ''}${details ? `: ${details}` : ''}`;
+    }).join('\n');
     return {
       text: list ? copy.packageList(list) : copy.packageMissing,
       links: [{ label: copy.packages, href: '/package' }, { label: copy.whatsapp, href: whatsappLink('Hello, please share your current photography packages and pricing.') }],
     };
   }
 
-  if (intent === 'offers' || /discount|promotion|special price|current offers|any offers|show offers|show me offers|what offers/.test(normalized)) {
+  if (intent === 'offers' || /discount|promotion|special price|current offers|any offers|show offers|show me offers|what offers|ऑफर|ऑफ़र|सवलत|प्रमोशन/.test(normalized)) {
     const currentOffers = offers.filter((offer) => Date.parse(offer.startsAt) <= Date.now() && (!offer.endsAt || Date.parse(offer.endsAt) > Date.now()));
     return {
-      text: currentOffers.length
-        ? `Current offers listed on the website:\n${currentOffers.map((offer) => `${offer.title}: ${offer.description.replace(/\\n/g, ' ').replace(/\s+/g, ' ').trim()}`).join('\n')}`
-        : 'There are no current offers listed on the website. Contact the studio to ask about current promotions.',
-      links: [{ label: copy.packages, href: '/package' }, { label: copy.whatsapp, href: whatsappLink('Hello, please share your current photography offers.') }],
+      text: language === 'en'
+        ? currentOffers.length
+          ? `Current offers listed on the website:\n${currentOffers.map((offer) => `${offer.title}: ${offer.description.replace(/\\n/g, ' ').replace(/\s+/g, ' ').trim()}`).join('\n')}`
+          : copy.noOffers
+        : currentOffers.length
+          ? currentOffers.map((offer) => localizeOffer(offer, language)).join('\n\n')
+          : copy.noOffers,
+      links: [{ label: copy.offersLink, href: '/offers' }, { label: copy.whatsapp, href: whatsappLink('Hello, please share your current photography offers.') }],
     };
   }
 
-  if (/everything|all details|all information|tell me about the studio|what do you offer|what all|overview/.test(normalized)) {
+  if (/everything|all details|all information|tell me about the studio|what do you offer|what all|overview|सब कुछ|सभी जानकारी|पूरी जानकारी|स्टूडियो के बारे में|सर्व माहिती|सगळी माहिती|स्टुडिओबद्दल|सर्व काही/.test(normalized)) {
+    if (language !== 'en') {
+      const serviceNames = [...new Set((content?.services || []).map((item) => localizeServiceName(item.title, language)).filter((name) => name !== copy.otherService))].join(' · ');
+      const packageList = [...new Set(packages.map((item) => localizePackageName(item.name, language)))].join(' · ');
+      const branchNames = branchesForLanguage(content?.branches || [], language);
+      const hasCurrentOffers = offers.some((offer) => Date.parse(offer.startsAt) <= Date.now() && (!offer.endsAt || Date.parse(offer.endsAt) > Date.now()));
+      const offerSummary = hasCurrentOffers ? copy.offersAvailable : copy.noOffers;
+      return {
+        text: copy.overview(serviceNames || copy.serviceUnknown, packageList || copy.packageMissing, branchNames || copy.locationsLocalized, offerSummary),
+        links: [{ label: copy.services, href: '/ourservices' }, { label: copy.packages, href: '/package' }, { label: copy.galleryLink, href: '/gallery' }, { label: copy.contactLink, href: '/contact' }],
+      };
+    }
     const details = [
       `Photographer: Satish Molekar, with extensive hands-on experience in wedding, maternity, event, portrait, modeling, and candid photography.`,
       `Services: ${(content?.services || []).map((item) => `${item.title}: ${item.description} Deliverables: ${item.deliverables}`).join('\n') || 'See the services page.'}`,
@@ -344,8 +455,13 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
     return serviceName.length > 2 && normalized.includes(serviceName);
   });
   if (publishedService) {
+    const serviceDetails = findServiceDetails(publishedService.title);
     return {
-      text: copy.serviceOne(publishedService.title, publishedService.description, publishedService.deliverables),
+      text: language === 'en'
+        ? copy.serviceOne(publishedService.title, publishedService.description, publishedService.deliverables)
+        : serviceDetails
+          ? copy.serviceOne(serviceDetails.names[language], serviceDetails.details[language], '')
+          : copy.serviceUnknown,
       links: [{ label: copy.services, href: '/ourservices' }, { label: copy.book, href: '/booknow' }],
     };
   }
@@ -380,10 +496,7 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   }
 
   if (intent === 'services' || /service|services|shoot|photograph|videograph|event|wedding|engagement|portrait|drone|सेवा|सेवाएँ|सेवाएं|शूट|शादी|विवाह|लग्न|छायाचित्र|फोटोग्राफी|कार्यक्रम/.test(normalized) || question.includes('सेव')) {
-    const serviceList = (content?.services || []).map((item) => {
-      const serviceName = servicesByName[normalizeText(item.title)];
-      return serviceName?.names[language] || item.title;
-    }).join(', ');
+    const serviceList = [...new Set((content?.services || []).map((item) => localizeServiceName(item.title, language)))].join(', ');
     return {
       text: serviceList ? copy.serviceList(serviceList) : copy.which,
       links: [{ label: copy.services, href: '/ourservices' }, { label: copy.enquiry, href: '/portfolio' }],
@@ -398,7 +511,9 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
   }
 
   if (/gallery|portfolio|photos|pictures|work|गैलरी|फोटो|तस्वीर|छायाचित्र|गॅलरी|फोटो/.test(normalized)) {
-    const galleryHighlights = (content?.gallery || []).slice(0, 8).map((item) => `${item.title} (${item.category})${item.description ? `: ${item.description}` : ''}`).join('\n');
+    const galleryHighlights = language === 'en'
+      ? (content?.gallery || []).slice(0, 8).map((item) => `${item.title} (${item.category})${item.description ? `: ${item.description}` : ''}`).join('\n')
+      : '';
     return {
       text: galleryHighlights ? `${copy.gallery}\n${galleryHighlights}` : copy.gallery,
       links: [{ label: copy.galleryLink, href: '/gallery' }, { label: copy.privateGallery, href: '/client-gallery' }],
@@ -409,8 +524,8 @@ function makeReply(question: string, content: SiteContent | null, language: Chat
     const branches = content?.branches || [];
     const branchList = branches.map((branch) => `${branch.name} — ${branch.address}${branch.description ? `: ${branch.description}` : ''}`).join('\n');
     return {
-      text: branchList ? copy.locations(branchList) : copy.contact,
-      links: [...branches.map((branch) => ({ label: branch.name.replace('SM Photo Studio & Films - ', 'Map: '), href: branch.locationUrl })), { label: copy.call, href: 'tel:+919511835507' }],
+      text: language === 'en' ? (branchList ? copy.locations(branchList) : copy.contact) : copy.locationsLocalized,
+      links: [...branches.map((branch) => ({ label: `${copy.map}: ${localizeBranchName(branch.name, language)}`, href: branch.locationUrl })), { label: copy.call, href: 'tel:+919511835507' }],
     };
   }
 
