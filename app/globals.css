@@ -1578,14 +1578,13 @@ main {
 .home-offer-ad-cta { display: inline-flex; min-height: 30px; align-items: center; justify-content: center; gap: .3rem; padding: .3rem .65rem; border-radius: 999px; background: #b9872b; color: #fff; font-size: .76rem; font-weight: 800; text-decoration: none; box-shadow: 0 3px 9px rgba(125,82,13,.18); }
 .home-offer-ad-cta:hover { background: #9b6b19; }
 .home-offer-ad-close { position: absolute; z-index: 2; top: .55rem; right: .55rem; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid rgba(255,255,255,.8); border-radius: 50%; background: rgba(20,15,13,.72); color: #fff; font-size: 1.45rem; line-height: 1; cursor: pointer; }
-/* Festive Diwali sparkles span the entire shared header while an offer is active. */
-.site-header:has(.site-offer-active-marker) { isolation: isolate; }
-.site-header:has(.site-offer-active-marker)::before { position: absolute; z-index: 0; inset: 0; pointer-events: none; content: ''; opacity: .78; background-image: radial-gradient(circle,#fff5ae 0 1.5px,transparent 2.8px),radial-gradient(circle,#ff9b43 0 1.4px,transparent 2.8px),radial-gradient(circle,#ff5f79 0 1.5px,transparent 3px),radial-gradient(circle,#42d9e4 0 1.5px,transparent 3px),radial-gradient(circle,#c38aff 0 1.5px,transparent 3px),radial-gradient(circle,#ffdf5b 0 1px,transparent 2.5px),linear-gradient(105deg,transparent 8%,rgba(255,190,65,.17) 8.2%,transparent 8.6%,transparent 37%,rgba(255,91,125,.14) 37.2%,transparent 37.6%,transparent 68%,rgba(74,219,228,.14) 68.2%,transparent 68.6%); background-size: 47px 35px,61px 41px,73px 31px,53px 47px,89px 39px,37px 29px,100% 100%; background-position: 3% 50%,18% 20%,37% 75%,58% 24%,77% 70%,96% 30%,0 0; animation: header-diwali-sparkle 2.8s ease-in-out infinite alternate; }
-.site-header:has(.site-offer-active-marker) .site-header-inner { position: relative; z-index: 1; }
-:root:not([data-theme='dark']) .site-header:has(.site-offer-active-marker)::before { opacity: 1; filter: drop-shadow(0 0 1px rgba(40,25,0,.9)); }
-.header-firework { display: none; }
-.site-header:has(.site-offer-active-marker) .header-firework { position: absolute; z-index: 0; top: 50%; display: block; width: 82px; aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg,#ffe25c 0deg 2deg,transparent 2deg 12deg,#ff6a6a 12deg 14deg,transparent 14deg 24deg,#4cdaee 24deg 26deg,transparent 26deg 36deg,#d579ff 36deg 38deg,transparent 38deg 48deg,#ffb04c 48deg 50deg,transparent 50deg 60deg); mask-image: radial-gradient(circle,transparent 0 10%,#000 15% 68%,transparent 74%); animation: header-firework-burst 2.8s ease-out infinite; }
-:root:not([data-theme='dark']) .site-header:has(.site-offer-active-marker) .header-firework { filter: drop-shadow(0 0 2px rgba(35,24,8,.85)); background: repeating-conic-gradient(from 0deg,#b27a00 0deg 2deg,transparent 2deg 12deg,#d12d49 12deg 14deg,transparent 14deg 24deg,#008b9c 24deg 26deg,transparent 26deg 36deg,#8042bf 36deg 38deg,transparent 38deg 48deg,#c45a00 48deg 50deg,transparent 50deg 60deg); }
+/* Festive sparkles and fireworks stay visible across the shared header. */
+.site-header { isolation: isolate; }
+.site-header::before { position: absolute; z-index: 0; inset: 0; pointer-events: none; content: ''; opacity: .78; background-image: radial-gradient(circle,#fff5ae 0 1.5px,transparent 2.8px),radial-gradient(circle,#ff9b43 0 1.4px,transparent 2.8px),radial-gradient(circle,#ff5f79 0 1.5px,transparent 3px),radial-gradient(circle,#42d9e4 0 1.5px,transparent 3px),radial-gradient(circle,#c38aff 0 1.5px,transparent 3px),radial-gradient(circle,#ffdf5b 0 1px,transparent 2.5px),linear-gradient(105deg,transparent 8%,rgba(255,190,65,.17) 8.2%,transparent 8.6%,transparent 37%,rgba(255,91,125,.14) 37.2%,transparent 37.6%,transparent 68%,rgba(74,219,228,.14) 68.2%,transparent 68.6%); background-size: 47px 35px,61px 41px,73px 31px,53px 47px,89px 39px,37px 29px,100% 100%; background-position: 3% 50%,18% 20%,37% 75%,58% 24%,77% 70%,96% 30%,0 0; animation: header-diwali-sparkle 2.8s ease-in-out infinite alternate; }
+.site-header .site-header-inner { position: relative; z-index: 1; }
+:root:not([data-theme='dark']) .site-header::before { opacity: 1; filter: drop-shadow(0 0 1px rgba(40,25,0,.9)); }
+.header-firework { position: absolute; z-index: 0; top: 50%; display: block; width: 82px; aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0; background: repeating-conic-gradient(from 0deg,#ffe25c 0deg 2deg,transparent 2deg 12deg,#ff6a6a 12deg 14deg,transparent 14deg 24deg,#4cdaee 24deg 26deg,transparent 26deg 36deg,#d579ff 36deg 38deg,transparent 38deg 48deg,#ffb04c 48deg 50deg,transparent 50deg 60deg); mask-image: radial-gradient(circle,transparent 0 10%,#000 15% 68%,transparent 74%); animation: header-firework-burst 2.8s ease-out infinite; }
+:root:not([data-theme='dark']) .header-firework { filter: drop-shadow(0 0 2px rgba(35,24,8,.85)); background: repeating-conic-gradient(from 0deg,#b27a00 0deg 2deg,transparent 2deg 12deg,#d12d49 12deg 14deg,transparent 14deg 24deg,#008b9c 24deg 26deg,transparent 26deg 36deg,#8042bf 36deg 38deg,transparent 38deg 48deg,#c45a00 48deg 50deg,transparent 50deg 60deg); }
 .header-firework--one { left: 15%; animation-delay: 0s !important; }
 .header-firework--two { left: 52%; width: 65px !important; animation-delay: .9s !important; }
 .header-firework--three { left: 86%; width: 74px !important; animation-delay: 1.8s !important; }
@@ -1606,7 +1605,7 @@ main {
   .header-firework--two { left: 61%; width: 45px !important; }
   .header-firework--three { left: 94%; width: 50px !important; }
 }
-@media (prefers-reduced-motion: reduce) { .home-offer-ad-backdrop, .home-offer-ad-backdrop::before, .home-offer-ad, .site-header:has(.site-offer-active-marker)::before, .site-header:has(.site-offer-active-marker) .header-firework { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .home-offer-ad-backdrop, .home-offer-ad-backdrop::before, .home-offer-ad, .site-header::before, .header-firework { animation: none; } }
 
 @media (max-width: 960px) {
   .package-grid {
@@ -3833,3 +3832,7 @@ select:focus {
   .header-buttons .btn { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; padding: .7rem .35rem; font-size: clamp(.72rem, 3.3vw, .88rem); line-height: 1.15; white-space: nowrap; }
   .hero-section > .hero-offer-badge { width: 64px; }
 }
+
+.site-header-offer-badge { width: 58px; margin: 0 -4px; }
+@media (max-width: 768px) { .site-header-offer-badge { width: 52px; } }
+@media (max-width: 480px) { .site-header-offer-badge { width: 46px; } }

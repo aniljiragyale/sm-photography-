@@ -55,7 +55,7 @@ export function SiteHeader() {
             )}
           </button>
 
-          <SiteOfferBadge markerOnly />
+          <SiteOfferBadge className="site-header-offer-badge" />
 
           <nav aria-label="Main navigation">
             <ul className={`top-nav ${isOpen ? 'is-open' : ''}`}>

@@ -3,8 +3,10 @@ import { Redis } from '@upstash/redis';
 import { promises as fs } from 'fs';
 import path from 'path';
 import type { Offer } from './offer-types';
+import { DEFAULT_OFFERS } from './default-offers';
 
 const KEY = 'sm-photography:offers';
+const SEEDED_KEY = 'sm-photography:offers:default-seed-v1';
 const FILE = path.join(process.cwd(), 'data', 'offers.json');
 const hasRedis = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 
@@ -22,7 +24,18 @@ async function localWrite(offers: Offer[]) {
 
 export async function getOffers(): Promise<Offer[]> {
   if (!hasRedis()) return localRead();
-  const records = await Redis.fromEnv().hgetall<Record<string, Offer>>(KEY);
+  const redis = Redis.fromEnv();
+  let records = await redis.hgetall<Record<string, Offer>>(KEY);
+  if (!records || Object.keys(records).length === 0) {
+    // The production Redis database may be newly created. Restore the existing
+    // featured promotion once; the marker prevents deleted offers returning.
+    const seeded = await redis.get<string>(SEEDED_KEY);
+    if (!seeded) {
+      await redis.hset(KEY, Object.fromEntries(DEFAULT_OFFERS.map((offer) => [offer.slug, offer])));
+      await redis.set(SEEDED_KEY, '1');
+      records = await redis.hgetall<Record<string, Offer>>(KEY);
+    }
+  }
   return Object.values(records || {}).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
