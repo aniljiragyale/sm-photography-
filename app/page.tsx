@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_BANNER_IMAGE, defaultServices, defaultWebsiteSettings, subscribeToPublishedContent, type ServiceItem, type WebsiteSettings } from '@/lib/admin-data';
 import { HomeOfferPopup } from '@/components/home-offer-popup';
 import { SiteOfferBadge } from '@/components/site-offer-badge';
-import { OffersGrid } from '@/components/offers-grid';
 
 const galleryMoments = [
   {
@@ -175,7 +174,6 @@ export default function HomePage() {
       </header>
 
       <HomeOfferPopup />
-      <OffersGrid placement="home" compact />
 
       <section ref={statsRef} className="stats-strip" aria-label="Business stats">
         {stats.map((item, index) => (
