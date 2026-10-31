@@ -29,7 +29,16 @@ export async function POST(request: Request) {
     const payload = encode({ id: 1, email: email.trim().toLowerCase(), iat: now, exp: now + 7 * 24 * 60 * 60 });
     const unsignedToken = `${header}.${payload}`;
     const signature = createHmac('sha256', secret).update(unsignedToken).digest('base64url');
-    return NextResponse.json({ token: `${unsignedToken}.${signature}` });
+    const token = `${unsignedToken}.${signature}`;
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set('sm_admin_session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+    return response;
   } catch {
     return NextResponse.json({ error: 'Unable to process admin login.' }, { status: 400 });
   }

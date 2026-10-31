@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ADMIN_EMAIL, setAdminLoggedIn } from '@/lib/admin-data';
-import { setBackendToken } from '@/lib/backend';
+import { clearBackendToken } from '@/lib/backend';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -24,11 +24,11 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email: email.trim(), password }),
       });
       const result = await response.json();
-      if (!response.ok || !result.token) {
+      if (!response.ok) {
         setError(result.error || 'Invalid admin credentials.');
         return;
       }
-      setBackendToken(result.token);
+      clearBackendToken();
       setAdminLoggedIn(true);
       router.push('/admin');
     } catch {

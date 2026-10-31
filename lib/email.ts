@@ -29,7 +29,7 @@ export function sendBookingEmail(form: HTMLFormElement) {
     package: `${packageName}${formData.get('package_other') ? `: ${formData.get('package_other')}` : ''}`,
     event_date: String(formData.get('event_date') || ''),
     venue: String(formData.get('venue') || ''),
-    details: String(formData.get('schedule') || ''),
+    details: `${String(formData.get('schedule') || '')}${formData.get('offer') ? `\nOffer: ${String(formData.get('offer'))}` : ''}`,
     source: `${referral}${formData.get('referral_other') ? `: ${formData.get('referral_other')}` : ''}`,
   });
 }

@@ -28,7 +28,12 @@ function Countdown({ endsAt }: { endsAt: string | null }) {
   return <span className="offer-countdown">Ends in {days ? `${days}d ` : ''}{String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>;
 }
 
-export function OffersGrid({ packageName, compact = false }: { packageName?: OfferPackage; compact?: boolean }) {
+function OfferPrice({ offer }: { offer: Offer }) {
+  if (!offer.originalPrice || !offer.discountedPrice) return null;
+  return <p className="offer-price"><del>₹{offer.originalPrice?.toLocaleString('en-IN')}</del> <strong>₹{offer.discountedPrice.toLocaleString('en-IN')}</strong></p>;
+}
+
+export function OffersGrid({ packageName, compact = false, placement = 'packages' }: { packageName?: OfferPackage; compact?: boolean; placement?: 'home' | 'packages' | 'services' }) {
   const [offers, setOffers] = useState<Offer[]>([]);
   useEffect(() => {
     const loadOffers = () => fetch('/api/offers', { cache: 'no-store' })
@@ -41,7 +46,7 @@ export function OffersGrid({ packageName, compact = false }: { packageName?: Off
     return () => { window.clearInterval(refresh); document.removeEventListener('visibilitychange', onVisible); };
   }, []);
 
-  const visible = offers.filter((offer) => !packageName || offer.packages.includes(packageName));
+  const visible = offers.filter((offer) => (!packageName || offer.packages.includes(packageName)) && (!offer.placements?.length || offer.placements.includes(placement)));
   const featured = visible.find((offer) => offer.featured) || visible[0];
   const otherOffers = visible.filter((offer) => offer.id !== featured?.id);
 
@@ -60,9 +65,11 @@ export function OffersGrid({ packageName, compact = false }: { packageName?: Off
             <p className="eyebrow">Featured offer / {featured.packages.join(' / ')}</p>
             <span className="featured-offer-discount">{formatOfferDiscount(featured)}</span>
             <h3><Link href={`/offers/${featured.slug}`}>{featured.title}</Link></h3>
+            <OfferPrice offer={featured} />
             <p>{getOfferIntro(featured.description) || normalizeOfferCopy(featured.description)}</p>
             <Countdown endsAt={featured.endsAt} />
-            <Link className="featured-offer-cta" href={`/offers/${featured.slug}`}>View offer and details <span aria-hidden="true">-&gt;</span></Link>
+            {featured.endsAt && <small className="offer-validity">Valid until {new Date(featured.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</small>}
+            <div className="admin-actions"><Link className="featured-offer-cta" href={`/offers/${featured.slug}`}>Explore offer <span aria-hidden="true">-&gt;</span></Link><Link className="btn btn-primary" href={`/booknow?offer=${encodeURIComponent(featured.title)}`}>Book Now</Link><a className="offer-whatsapp" href={whatsappHref(featured)} target="_blank" rel="noreferrer">WhatsApp enquiry</a></div>
           </div>
         </article>
         {otherOffers.length > 0 && <div className="offers-grid">
@@ -75,10 +82,13 @@ export function OffersGrid({ packageName, compact = false }: { packageName?: Off
               <div className="offer-card-body">
                 <p className="offer-package-label">{offer.packages.join(' / ')}</p>
                 <h3><Link href={`/offers/${offer.slug}`}>{offer.title}</Link></h3>
+                <OfferPrice offer={offer} />
                 <p>{getOfferIntro(offer.description) || normalizeOfferCopy(offer.description)}</p>
                 <Countdown endsAt={offer.endsAt} />
+                {offer.endsAt && <small className="offer-validity">Valid until {new Date(offer.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</small>}
                 <div className="offer-card-actions">
                   <Link href={`/offers/${offer.slug}`} className="offer-details-link">Offer details</Link>
+                  <Link href={`/booknow?offer=${encodeURIComponent(offer.title)}`} className="offer-details-link">Book Now</Link>
                   <a href={whatsappHref(offer, packageName || offer.packages[0])} target="_blank" rel="noreferrer" className="offer-whatsapp">Enquire on WhatsApp</a>
                 </div>
               </div>

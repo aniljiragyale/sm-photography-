@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { Redis } from '@upstash/redis';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -64,6 +65,7 @@ export type ClientGallery = {
   photos: GalleryPhoto[];
   categories: GalleryCategory[];
   submissions: GallerySubmission[];
+  selections?: Record<string, string[]>;
 };
 
 export type GalleryStore = {
@@ -71,6 +73,8 @@ export type GalleryStore = {
 };
 
 const STORE_PATH = path.join(process.cwd(), 'data', 'gallery-store.json');
+const STORE_KEY = 'sm-photography:client-galleries';
+const hasRedis = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 
 const hashText = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
 
@@ -112,10 +116,13 @@ const seedGallery = (): ClientGallery => {
     photos,
     categories: defaultCategories.map((name, index) => ({ id: `${name.toLowerCase()}-${index + 1}`, galleryId: 'seed-gallery', name, sortOrder: index + 1 })),
     submissions: [],
+    selections: {},
   };
 };
 
 export const ensureStore = async (): Promise<GalleryStore> => {
+  if (hasRedis()) return (await readStore());
+  if (process.env.VERCEL) return { galleries: [] };
   try {
     await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
     try {
@@ -137,6 +144,11 @@ export const ensureStore = async (): Promise<GalleryStore> => {
 };
 
 export const readStore = async (): Promise<GalleryStore> => {
+  if (hasRedis()) {
+    const saved = await Redis.fromEnv().get<GalleryStore>(STORE_KEY);
+    return saved && Array.isArray(saved.galleries) ? saved : { galleries: [] };
+  }
+  if (process.env.VERCEL) throw new Error('Connect Upstash Redis to enable client galleries on Vercel.');
   try {
     const raw = await fs.readFile(STORE_PATH, 'utf8');
     if (!raw.trim()) return { galleries: [seedGallery()] };
@@ -152,6 +164,11 @@ export const readStore = async (): Promise<GalleryStore> => {
 };
 
 export const writeStore = async (store: GalleryStore): Promise<void> => {
+  if (hasRedis()) {
+    await Redis.fromEnv().set(STORE_KEY, store);
+    return;
+  }
+  if (process.env.VERCEL) throw new Error('Connect Upstash Redis to save client galleries on Vercel.');
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
   await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2), 'utf8');
 };
@@ -170,11 +187,12 @@ export const createGalleryRecord = (input: {
   slug?: string;
 }): ClientGallery => {
   const now = new Date().toISOString();
+  const id = `gallery-${crypto.randomUUID()}`;
   const slugBase = input.slug || `${makeSlug(input.clientName)}-${makeSlug(input.galleryName)}`;
   const slug = `${slugBase}`.replace(/-+/g, '-').replace(/-$/, '').substring(0, 64) || 'new-gallery';
 
   return {
-    id: `gallery-${Date.now()}`,
+    id,
     slug,
     clientName: input.clientName.trim() || 'Client',
     galleryName: input.galleryName.trim() || 'New Gallery',
@@ -191,8 +209,9 @@ export const createGalleryRecord = (input: {
     createdAt: now,
     updatedAt: now,
     photos: [],
-    categories: defaultCategories.map((name, index) => ({ id: `${slug}-${index + 1}`, galleryId: `gallery-${Date.now()}`, name, sortOrder: index + 1 })),
+    categories: defaultCategories.map((name, index) => ({ id: `${slug}-${index + 1}`, galleryId: id, name, sortOrder: index + 1 })),
     submissions: [],
+    selections: {},
   };
 };
 
@@ -241,4 +260,5 @@ export const normalizeGallery = (gallery: ClientGallery): ClientGallery => ({
   photos: gallery.photos ?? [],
   categories: gallery.categories ?? [],
   submissions: gallery.submissions ?? [],
+  selections: gallery.selections ?? {},
 });

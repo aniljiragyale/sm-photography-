@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { OFFER_PACKAGES, type Offer } from '@/lib/offer-types';
-import { getBackendToken } from '@/lib/backend';
 import { isAdminLoggedIn } from '@/lib/admin-data';
 
 type FormState = {
   title: string; slug: string; description: string; image: string; discountType: 'percentage' | 'fixed' | 'none'; discountValue: string;
+  originalPrice: string; discountedPrice: string; placements: Array<'home' | 'packages' | 'services'>;
   packages: string[]; startsAt: string; endsAt: string; active: boolean; label: '' | 'Special Offer' | 'Limited Time Offer';
   featured: boolean;
 };
@@ -21,7 +21,7 @@ function localDateTime(value: string) {
 
 function emptyForm(): FormState {
   const start = new Date();
-  return { title: '', slug: '', description: '', image: '', discountType: 'percentage', discountValue: '10', packages: [], startsAt: localDateTime(start.toISOString()), endsAt: '', active: true, featured: false, label: 'Limited Time Offer' };
+  return { title: '', slug: '', description: '', image: '', discountType: 'percentage', discountValue: '10', originalPrice: '', discountedPrice: '', placements: ['home', 'packages'], packages: [], startsAt: localDateTime(start.toISOString()), endsAt: '', active: true, featured: false, label: 'Limited Time Offer' };
 }
 
 export default function StudioOffersPage() {
@@ -33,9 +33,7 @@ export default function StudioOffersPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const token = getBackendToken();
-
-  const headers = useMemo(() => ({ Authorization: token ? `Bearer ${token}` : '' }), [token]);
+  const headers = useMemo(() => ({}), []);
   const loadOffers = useCallback(async () => {
     const response = await fetch('/api/offers?manage=1', { headers, cache: 'no-store' });
     if (response.status === 401) { router.replace('/studio-login?next=%2Fstudio%2Foffers'); return; }
@@ -44,7 +42,7 @@ export default function StudioOffersPage() {
   }, [headers, router]);
 
   useEffect(() => {
-    if (!isAdminLoggedIn() || !getBackendToken()) { router.replace('/studio-login?next=%2Fstudio%2Foffers'); return; }
+    if (!isAdminLoggedIn()) { router.replace('/studio-login?next=%2Fstudio%2Foffers'); return; }
     loadOffers().catch((error: unknown) => setStatus(error instanceof Error ? error.message : 'Could not load offers.')).finally(() => setLoading(false));
   }, [loadOffers, router]);
 
@@ -57,12 +55,12 @@ export default function StudioOffersPage() {
     }
     const saved = offers.find((offer) => offer.slug === editing);
     if (!saved) { resetForm(); return; }
-    setForm({ title: saved.title, slug: saved.slug, description: saved.description, image: saved.image, discountType: saved.discountType, discountValue: String(saved.discountValue), packages: saved.packages, startsAt: localDateTime(saved.startsAt), endsAt: saved.endsAt ? localDateTime(saved.endsAt) : '', active: saved.active, featured: Boolean(saved.featured), label: saved.label });
+    setForm({ title: saved.title, slug: saved.slug, description: saved.description, image: saved.image, discountType: saved.discountType, discountValue: String(saved.discountValue), originalPrice: saved.originalPrice ? String(saved.originalPrice) : '', discountedPrice: saved.discountedPrice ? String(saved.discountedPrice) : '', placements: saved.placements || ['home', 'packages'], packages: saved.packages, startsAt: localDateTime(saved.startsAt), endsAt: saved.endsAt ? localDateTime(saved.endsAt) : '', active: saved.active, featured: Boolean(saved.featured), label: saved.label });
     setStatus('Changes reset to the saved offer.');
   };
   const editOffer = (offer: Offer) => {
     setEditing(offer.slug);
-    setForm({ title: offer.title, slug: offer.slug, description: offer.description, image: offer.image, discountType: offer.discountType, discountValue: String(offer.discountValue), packages: offer.packages, startsAt: localDateTime(offer.startsAt), endsAt: offer.endsAt ? localDateTime(offer.endsAt) : '', active: offer.active, featured: Boolean(offer.featured), label: offer.label });
+    setForm({ title: offer.title, slug: offer.slug, description: offer.description, image: offer.image, discountType: offer.discountType, discountValue: String(offer.discountValue), originalPrice: offer.originalPrice ? String(offer.originalPrice) : '', discountedPrice: offer.discountedPrice ? String(offer.discountedPrice) : '', placements: offer.placements || ['home', 'packages'], packages: offer.packages, startsAt: localDateTime(offer.startsAt), endsAt: offer.endsAt ? localDateTime(offer.endsAt) : '', active: offer.active, featured: Boolean(offer.featured), label: offer.label });
     setStatus('');
     document.getElementById('offer-editor')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -82,7 +80,7 @@ export default function StudioOffersPage() {
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setSaving(true); setStatus('Saving offer...');
     const slug = form.slug.trim().toLowerCase();
-    const payload = { ...form, existingId: editing ? offers.find((offer) => offer.slug === editing)?.id : undefined, slug, discountValue: Number(form.discountValue || 0), startsAt: new Date(form.startsAt).toISOString(), endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null };
+    const payload = { ...form, existingId: editing ? offers.find((offer) => offer.slug === editing)?.id : undefined, slug, discountValue: Number(form.discountValue || 0), originalPrice: form.originalPrice ? Number(form.originalPrice) : null, discountedPrice: form.discountedPrice ? Number(form.discountedPrice) : null, startsAt: new Date(form.startsAt).toISOString(), endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : null };
     try {
       const response = await fetch('/api/offers', { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const result = await response.json() as Offer | { error?: string };
@@ -100,6 +98,7 @@ export default function StudioOffersPage() {
   };
 
   const togglePackage = (item: string) => setForm((current) => ({ ...current, packages: current.packages.includes(item) ? current.packages.filter((value) => value !== item) : [...current.packages, item] }));
+  const togglePlacement = (item: FormState['placements'][number]) => setForm((current) => ({ ...current, placements: current.placements.includes(item) ? current.placements.filter((value) => value !== item) : [...current.placements, item] }));
   const updateTitle = (value: string) => setForm((current) => ({ ...current, title: value, slug: editing ? current.slug : value.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }));
   const useMaternityPosterContent = () => setForm((current) => ({
     ...current,
@@ -108,6 +107,9 @@ export default function StudioOffersPage() {
     description: 'Celebrate your journey to motherhood with a maternity session designed around you.\n\nBASIC — ₹3,000\n10 edited photos · 1 cinematic reel · 1 outfit included\n\nPREMIUM — ₹5,000\n15 edited photos · 1 cinematic reel · 2 outfits included\n\nPREMIUM PLUS — ₹7,000\n15 edited photos · 1 cinematic reel · 2 outfits · professional makeup and hairstyling\n\nLUXURY — ₹10,000\n15 edited photos · 1 cinematic reel · premium album · 2 outfits · professional makeup and hairstyling\n\nProfessional photography, creative concepts, a comfortable and safe experience, and timeless memories.',
     discountType: 'none',
     discountValue: '0',
+    originalPrice: '',
+    discountedPrice: '',
+    placements: ['home', 'packages'],
     packages: ['Maternity'],
     featured: true,
     active: true,
@@ -125,7 +127,7 @@ export default function StudioOffersPage() {
             const expired = Boolean(offer.endsAt && Date.parse(offer.endsAt) <= Date.now());
             return <article className="offers-admin-item" key={offer.id}>
               {offer.image && <img src={offer.image} alt="" />}
-              <div className="offers-admin-item-copy"><h3>{offer.title}</h3><p>{offer.packages.join(' · ')} · {offer.discountType === 'percentage' ? `${offer.discountValue}% off` : offer.discountType === 'fixed' ? `₹${offer.discountValue} off` : 'Special price'}</p><p className="form-note">Starts {new Date(offer.startsAt).toLocaleString()}{offer.endsAt ? ` · Expires ${new Date(offer.endsAt).toLocaleString()}` : ' · No expiry'}</p><span className={`offer-admin-state ${live ? 'is-live' : ''}`}>{live ? 'Live' : expired ? 'Expired' : offer.active ? 'Scheduled' : 'Inactive'}</span>{offer.featured && <span className="offer-admin-featured">Featured on homepage</span>}<div className="admin-actions"><button className="btn btn-secondary" type="button" onClick={() => editOffer(offer)}>Edit</button><button className="btn btn-secondary" type="button" onClick={() => void navigator.clipboard.writeText(`${baseUrl}/offers/${offer.slug}`).then(() => setStatus('Offer link copied.'))}>Copy link</button><a className="btn btn-secondary" href={`/offers/${offer.slug}`} target="_blank" rel="noreferrer">Preview</a><button className="remove-btn" type="button" onClick={() => void removeOffer(offer.slug)}>Delete offer</button></div></div>
+              <div className="offers-admin-item-copy"><h3>{offer.title}</h3><p>{offer.packages.join(' · ')} · {offer.discountType === 'percentage' ? `${offer.discountValue}% off` : offer.discountType === 'fixed' ? `₹${offer.discountValue} off` : 'Special price'}</p>{offer.originalPrice && offer.discountedPrice && <p>₹{offer.originalPrice.toLocaleString('en-IN')} → ₹{offer.discountedPrice.toLocaleString('en-IN')}</p>}<p className="form-note">Appears on: {(offer.placements || ['home', 'packages']).join(', ')} · Starts {new Date(offer.startsAt).toLocaleString()}{offer.endsAt ? ` · Expires ${new Date(offer.endsAt).toLocaleString()}` : ' · No expiry'}</p><span className={`offer-admin-state ${live ? 'is-live' : ''}`}>{live ? 'Live' : expired ? 'Expired' : offer.active ? 'Scheduled' : 'Inactive'}</span>{offer.featured && <span className="offer-admin-featured">Featured on homepage</span>}<div className="admin-actions"><button className="btn btn-secondary" type="button" onClick={() => editOffer(offer)}>Edit</button><button className="btn btn-secondary" type="button" onClick={() => void navigator.clipboard.writeText(`${baseUrl}/offers/${offer.slug}`).then(() => setStatus('Offer link copied.'))}>Copy link</button><a className="btn btn-secondary" href={`/offers/${offer.slug}`} target="_blank" rel="noreferrer">Preview</a><button className="remove-btn" type="button" onClick={() => void removeOffer(offer.slug)}>Delete offer</button></div></div>
             </article>;
           })}</div>
         )}</section>
@@ -135,6 +137,8 @@ export default function StudioOffersPage() {
           <label>Description<textarea className="field" required maxLength={1000} rows={4} value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} /></label>
           <fieldset className="offer-package-picker"><legend>Applicable packages</legend>{OFFER_PACKAGES.map((item) => <label key={item}><input type="checkbox" checked={form.packages.includes(item)} onChange={() => togglePackage(item)} /> {item}</label>)}</fieldset>
           <div className="grid-form two-column-form"><label>Discount type<select className="field" value={form.discountType} onChange={(event) => setForm((current) => ({ ...current, discountType: event.target.value as FormState['discountType'], discountValue: event.target.value === 'none' ? '0' : current.discountValue }))}><option value="percentage">Percentage</option><option value="fixed">Fixed amount (₹)</option><option value="none">No discount amount</option></select></label>{form.discountType !== 'none' && <label>{form.discountType === 'percentage' ? 'Discount percent' : 'Discount amount (₹)'}<input className="field" type="number" min="1" max={form.discountType === 'percentage' ? '100' : '10000000'} step="1" required value={form.discountValue} onChange={(event) => setForm((current) => ({ ...current, discountValue: event.target.value }))} /></label>}</div>
+          <div className="grid-form two-column-form"><label>Original price (optional)<input className="field" type="number" min="1" step="1" value={form.originalPrice} onChange={(event) => setForm((current) => ({ ...current, originalPrice: event.target.value }))} placeholder="Enter the actual regular price" /></label><label>Offer price (optional)<input className="field" type="number" min="1" step="1" value={form.discountedPrice} onChange={(event) => setForm((current) => ({ ...current, discountedPrice: event.target.value }))} placeholder="Enter the actual discounted price" /></label></div>
+          <fieldset className="offer-package-picker"><legend>Show this offer on</legend>{([{ key: 'home', label: 'Homepage' }, { key: 'packages', label: 'Packages page' }, { key: 'services', label: 'Services page' }] as const).map(({ key, label }) => <label key={key}><input type="checkbox" checked={form.placements.includes(key)} onChange={() => togglePlacement(key)} /> {label}</label>)}</fieldset>
           <div className="grid-form two-column-form"><label>Starts at<input className="field" type="datetime-local" required value={form.startsAt} onChange={(event) => setForm((current) => ({ ...current, startsAt: event.target.value }))} /></label><label>Expires at (optional)<input className="field" type="datetime-local" value={form.endsAt} onChange={(event) => setForm((current) => ({ ...current, endsAt: event.target.value }))} /></label></div>
           <div className="grid-form two-column-form"><label>Offer label<select className="field" value={form.label} onChange={(event) => setForm((current) => ({ ...current, label: event.target.value as FormState['label'] }))}><option value="">No label</option><option>Special Offer</option><option>Limited Time Offer</option></select></label><div className="offer-check-toggles"><label className="offer-active-toggle"><input type="checkbox" checked={form.active} onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))} /> Active offer</label><label className="offer-active-toggle"><input type="checkbox" checked={form.featured} onChange={(event) => setForm((current) => ({ ...current, featured: event.target.checked }))} /> Feature as the big homepage offer</label></div></div>
           <label>Promotional image {form.image ? <img className="offer-upload-preview" src={form.image} alt="Offer banner preview" /> : null}<input className="field" type="file" accept="image/*" disabled={uploading} onChange={(event) => void uploadImage(event.target.files?.[0])} /></label>

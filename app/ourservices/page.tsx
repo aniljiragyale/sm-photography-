@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { defaultServices, loadPublishedContent, type ServiceItem } from '@/lib/admin-data';
+import { defaultServices, subscribeToPublishedContent, type ServiceItem } from '@/lib/admin-data';
+import { OffersGrid } from '@/components/offers-grid';
 
 const WHATSAPP_NUMBER = '919511835507';
 const WHATSAPP_MESSAGE = encodeURIComponent(
@@ -13,7 +14,7 @@ export default function ServicesPage() {
   const [services, setServices] = useState<ServiceItem[]>(defaultServices);
 
   useEffect(() => {
-    loadPublishedContent().then((content) => setServices(content.services));
+    return subscribeToPublishedContent((content) => setServices(content.services.filter((service) => service.active !== false)));
   }, []);
 
   return (
@@ -36,14 +37,18 @@ export default function ServicesPage() {
           {services.map((service, index) => (
             <article key={service.title} className="service-card-plain service-catalog-item animated-card" style={{ animationDelay: `${index * 80}ms` }}>
               <span className="service-catalog-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              {service.image && <img className="service-catalog-image" src={service.image} alt={service.title} loading="lazy" decoding="async" />}
               <div className="service-catalog-copy">
                 <h2>{service.title}</h2>
+                {service.price && <p className="service-price">{service.price}</p>}
                 <p>{service.description}</p>
                 <p className="service-deliverables"><strong>What you receive</strong>{service.deliverables}</p>
               </div>
             </article>
           ))}
         </div>
+
+        <OffersGrid placement="services" compact />
 
         <section className="customisation-banner" aria-label="Custom photography services">
           <p className="eyebrow">Your idea, our craft</p>

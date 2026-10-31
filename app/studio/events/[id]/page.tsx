@@ -1,230 +1,95 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { getBackendToken } from '@/lib/backend';
+import { isAdminLoggedIn } from '@/lib/admin-data';
 
-type EventItem = {
-  id: number;
-  client_name: string;
-  event_name: string;
-  event_type: string;
-  event_date: string;
-  location: string;
-  event_code: string;
-  selection_limit: number;
-  expiry_days: number;
-  watermark: number;
-  allow_download: number;
-  status: string;
-};
-
-type EventPhoto = {
-  id: number;
-  title: string;
-  category: string;
-  image_url: string;
-  description: string;
-};
+type GalleryPhoto = { id: string; title: string; category: string; image_url: string; description: string };
+type GalleryEvent = { id: string; slug: string; clientName: string; galleryName: string; eventType: string; eventDate: string; location: string; status: string; photos: GalleryPhoto[]; selectionLimit: number | null; expiresAt: string | null; submissions: Array<{ id: string; selectedCount: number; submittedAt: string; status: string }> };
 
 export default function EventDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = Number(params?.id || 0);
+  const id = String(params?.id || '');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [event, setEvent] = useState<EventItem | null>(null);
-  const [photos, setPhotos] = useState<EventPhoto[]>([]);
+  const [gallery, setGallery] = useState<GalleryEvent | null>(null);
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('wedding');
+  const [category, setCategory] = useState('BRIDE');
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
 
-  const fetchEvent = async () => {
-    const token = getBackendToken();
-    const response = await fetch(`http://localhost:4000/api/events`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-    });
-
-    if (!response.ok) {
-      router.push('/studio-login');
-      return;
-    }
-
-    const events = (await response.json()) as EventItem[];
-    const match = events.find((item) => item.id === id);
-    if (match) {
-      setEvent(match);
-      const photosResponse = await fetch(`http://localhost:4000/api/events/${id}/photos`, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-      });
-      if (photosResponse.ok) {
-        const result = (await photosResponse.json()) as EventPhoto[];
-        setPhotos(result);
-      }
-    }
-    setLoading(false);
-  };
+  const fetchGallery = useCallback(async () => {
+    const response = await fetch('/api/admin/galleries', { cache: 'no-store' });
+    if (response.status === 401) { router.replace('/studio-login'); return; }
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Unable to load gallery.');
+    const found = (result as GalleryEvent[]).find((item) => item.id === id || item.slug === id);
+    setGallery(found || null);
+  }, [id, router]);
 
   useEffect(() => {
-    if (!id) return;
-    fetchEvent();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    if (!isAdminLoggedIn()) { router.replace('/studio-login'); return; }
+    if (id) fetchGallery().catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Unable to load gallery.')).finally(() => setLoading(false));
+  }, [fetchGallery, id, router]);
+
+  const categories = useMemo(() => [...new Set(gallery?.photos.map((photo) => photo.category) || [])], [gallery]);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const form = new FormData();
-    form.append('file', file);
-
-    const token = getBackendToken();
-    const response = await fetch('http://localhost:4000/api/admin/upload', {
-      method: 'POST',
-      headers: { Authorization: token ? `Bearer ${token}` : '' },
-      body: form,
-    });
-
-    const result = await response.json();
-    if (!response.ok || !result.url) {
-      setMessage(result.error || 'Image upload failed');
-      return;
-    }
-
-    setImageUrl(result.url);
-    setMessage('Image uploaded. Save it to the event album.');
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file || !gallery) return;
+    setWorking(true);
+    setMessage('Uploading photo to persistent storage...');
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      const uploadResponse = await fetch('/api/upload', { method: 'POST', body: data });
+      const uploaded = await uploadResponse.json() as { url?: string; error?: string };
+      if (!uploadResponse.ok || !uploaded.url) throw new Error(uploaded.error || 'Image upload failed.');
+      setMessage('Saving photo in the client gallery...');
+      const response = await fetch(`/api/admin/galleries/${encodeURIComponent(gallery.id)}/photos`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title || file.name, category, description, imageUrl: uploaded.url }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not save photo.');
+      setTitle(''); setDescription('');
+      await fetchGallery();
+      setMessage('Photo uploaded and published to the client gallery.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Image upload failed.');
+    } finally { setWorking(false); input.value = ''; }
   };
 
-  const addPhoto = async () => {
-    if (!imageUrl) {
-      setMessage('Please upload a photo first.');
-      return;
-    }
-
-    const token = getBackendToken();
-    const response = await fetch(`http://localhost:4000/api/events/${id}/photos`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-      body: JSON.stringify({
-        title: title || 'Event Photo',
-        category,
-        imageUrl,
-        description,
-      }),
-    });
-
+  const removePhoto = async (photo: GalleryPhoto) => {
+    if (!gallery || !window.confirm(`Remove “${photo.title}” from this gallery?`)) return;
+    const response = await fetch(`/api/admin/galleries/${encodeURIComponent(gallery.id)}/photos?photoId=${encodeURIComponent(photo.id)}`, { method: 'DELETE' });
     const result = await response.json();
-    if (!response.ok) {
-      setMessage(result.error || 'Could not save photo.');
-      return;
-    }
-
-    setTitle('');
-    setDescription('');
-    setImageUrl('');
-    setMessage('Photo added successfully.');
-    fetchEvent();
+    if (!response.ok) { setMessage(result.error || 'Could not remove photo.'); return; }
+    await fetchGallery();
+    setMessage('Photo removed from the client gallery.');
   };
 
-  if (loading) {
-    return <div className="page-shell"><div className="page-content"><p>Loading event...</p></div></div>;
-  }
+  if (loading) return <div className="page-shell"><div className="page-content"><p>Loading gallery...</p></div></div>;
+  if (!gallery) return <div className="page-shell"><div className="page-content"><p>{message || 'Gallery not found.'}</p><Link href="/studio/events">Back to galleries</Link></div></div>;
 
-  if (!event) {
-    return <div className="page-shell"><div className="page-content"><p>Event not found.</p></div></div>;
-  }
-
-  return (
-    <div className="page-shell">
-      <div className="page-header">
-        <p className="eyebrow">Event album</p>
-        <h1>{event.event_name}</h1>
-      </div>
-
-      <div className="page-content">
-        <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
-          <p><strong>Client:</strong> {event.client_name || 'Not set'}</p>
-          <p><strong>Code:</strong> {event.event_code}</p>
-          <p><strong>Type:</strong> {event.event_type}</p>
-          <p><strong>Date:</strong> {event.event_date}</p>
-          <p><strong>Location:</strong> {event.location || 'Not set'}</p>
-        </div>
-
-        <div className="admin-card">
-          <h2>Add photo to this event</h2>
-          <div className="admin-form">
-            <label>
-              Title
-              <input className="field" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wedding photo 01" />
-            </label>
-
-            <label>
-              Category
-              <select className="field" value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="wedding">Wedding</option>
-                <option value="prewedding">Pre-Wedding</option>
-                <option value="engagement">Engagement</option>
-                <option value="maternity">Maternity</option>
-                <option value="candid">Candid</option>
-                <option value="modeling">Modeling</option>
-              </select>
-            </label>
-
-            <label>
-              Description
-              <textarea className="field" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Short photo note" />
-            </label>
-
-            <div className="upload-row">
-              <button type="button" className="btn btn-secondary upload-button" onClick={() => fileInputRef.current?.click()}>
-                Upload Image
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleUpload} />
-            </div>
-
-            {imageUrl ? (
-              <div style={{ marginTop: '1rem' }}>
-                <img src={imageUrl} alt="Uploaded preview" style={{ maxWidth: '220px', borderRadius: '12px' }} />
-              </div>
-            ) : null}
-
-            <div className="admin-actions">
-              <button type="button" className="submit-btn" onClick={addPhoto}>Save Photo</button>
-            </div>
-
-            {message ? <p className="form-status">{message}</p> : null}
-          </div>
-        </div>
-
-        <div className="admin-card" style={{ marginTop: '1.5rem' }}>
-          <h2>Uploaded photos</h2>
-          {photos.length === 0 ? (
-            <p>No photos uploaded for this event yet.</p>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-              {photos.map((photo) => (
-                <div key={photo.id} style={{ border: '1px solid var(--line)', borderRadius: '12px', overflow: 'hidden' }}>
-                  <img src={photo.image_url} alt={photo.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
-                  <div style={{ padding: '0.75rem' }}>
-                    <strong>{photo.title}</strong>
-                    <p>{photo.category}</p>
-                    {photo.description ? <small>{photo.description}</small> : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+  const clientUrl = `${typeof window === 'undefined' ? '' : window.location.origin}/client-gallery/${gallery.slug}`;
+  return <div className="page-shell">
+    <div className="page-header admin-header-row"><div><p className="eyebrow">Client gallery</p><h1>{gallery.galleryName}</h1><p>{gallery.clientName} · {gallery.eventType} · {gallery.eventDate}</p></div><Link href="/studio/events" className="btn btn-secondary">All galleries</Link></div>
+    <div className="page-content">
+      <section className="admin-card"><p><strong>Client link:</strong> <a href={clientUrl} target="_blank" rel="noreferrer">{clientUrl}</a></p><p><strong>Photos:</strong> {gallery.photos.length} · <strong>Selection limit:</strong> {gallery.selectionLimit || 'No limit'} · <strong>Status:</strong> {gallery.status}</p><p><strong>Location:</strong> {gallery.location || 'Not set'} · <strong>Expires:</strong> {gallery.expiresAt ? new Date(gallery.expiresAt).toLocaleDateString() : 'Never'}</p><button className="btn btn-secondary" type="button" onClick={() => void navigator.clipboard.writeText(clientUrl).then(() => setMessage('Client gallery link copied.'))}>Copy client link</button></section>
+      <section className="admin-card" style={{ marginTop: '1.25rem' }}><h2>Add photo to this gallery</h2><div className="admin-form">
+        <label>Photo title<input className="field" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Wedding photo 01" /></label>
+        <label>Category<input className="field" list="client-gallery-categories" value={category} onChange={(event) => setCategory(event.target.value)} />{categories.length > 0 && <datalist id="client-gallery-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>}</label>
+        <label>Description<textarea className="field" value={description} onChange={(event) => setDescription(event.target.value)} rows={3} /></label>
+        <div className="upload-row"><button type="button" className="btn btn-secondary upload-button" disabled={working} onClick={() => fileInputRef.current?.click()}>{working ? 'Uploading...' : 'Upload & Save Photo'}</button><input ref={fileInputRef} type="file" accept="image/*" hidden onChange={(event) => void handleUpload(event)} /></div>
+        {message && <p className="form-status" role="status">{message}</p>}
+      </div></section>
+      <section className="admin-card" style={{ marginTop: '1.25rem' }}><h2>Uploaded photos</h2>{gallery.photos.length === 0 ? <p>No photos uploaded yet.</p> : <div className="admin-item-list">{gallery.photos.map((photo) => <article className="admin-item-card" key={photo.id}><img src={photo.image_url} alt={photo.title} style={{ width: 150, height: 120, objectFit: 'cover', borderRadius: 10 }} /><div><h3>{photo.title}</h3><p>{photo.category}</p>{photo.description && <p>{photo.description}</p>}</div><button type="button" className="remove-btn" onClick={() => void removePhoto(photo)}>Remove photo</button></article>)}</div>}</section>
+      {gallery.submissions.length > 0 && <section className="admin-card" style={{ marginTop: '1.25rem' }}><h2>Client selections</h2>{gallery.submissions.map((submission) => <p key={submission.id}>{new Date(submission.submittedAt).toLocaleString()} · {submission.selectedCount} selected · {submission.status}</p>)}</section>}
     </div>
-  );
+  </div>;
 }

@@ -1,12 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { getEmailErrorMessage, sendEnquiryEmail } from '@/lib/email';
+import { defaultBranches, defaultWebsiteSettings, subscribeToPublishedContent, type BranchItem, type WebsiteSettings } from '@/lib/admin-data';
 
 export default function ContactPage() {
   const [status, setStatus] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [settings, setSettings] = useState<WebsiteSettings>(defaultWebsiteSettings);
+  const [branches, setBranches] = useState<BranchItem[]>(defaultBranches);
+
+  useEffect(() => {
+    return subscribeToPublishedContent((content) => {
+      setSettings(content.settings || defaultWebsiteSettings);
+      setBranches(content.branches || defaultBranches);
+    });
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,30 +53,30 @@ export default function ContactPage() {
           <p>Whether you are planning a wedding, personal session, or brand content, we are ready to help bring your vision to life.</p>
           <ul className="contact-details" style={{ marginTop: '1.5rem' }}>
             <li>
-              <strong>Phone:</strong> <span className="nowrap">+91-95118 35507</span>
+              <strong>Phone:</strong> <a className="nowrap" href={`tel:${settings.contactPhone.replace(/[^+\d]/g, '')}`}>{settings.contactPhone}</a>
             </li>
             <li>
-              <strong>Email:</strong> <a href="mailto:smphotography5207@gmail.com">smphotography5207@gmail.com</a>
+              <strong>Email:</strong> <a href={`mailto:${settings.contactEmail}`}>{settings.contactEmail}</a>
             </li>
             <li>
-              <strong>Branch 1:</strong> <a href="https://maps.app.goo.gl/AwgoQrcp92duJkoT6" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Malgaon</a>
+              <strong>Branch 1:</strong> <a href={branches[0]?.locationUrl || '#'} target="_blank" rel="noreferrer">{branches[0]?.name || 'Studio branch'}</a>
             </li>
             <li>
-              <strong>Branch 2:</strong> <a href="https://share.google/ZnDunM3nDt7smSKDr" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Miraj</a>
+              <strong>Branch 2:</strong> <a href={branches[1]?.locationUrl || '#'} target="_blank" rel="noreferrer">{branches[1]?.name || 'Studio branch'}</a>
             </li>
           </ul>
 
           <div className="social-links" style={{ marginTop: '1.25rem' }}>
-            <a href="https://www.linkedin.com/in/satishmolekar" target="_blank" rel="noreferrer" aria-label="LinkedIn">in</a>
-            <a href="https://www.facebook.com/share/1FDbovcGCA" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
-            <a href="https://www.instagram.com/the_sm_studio__/?utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <a href={settings.socialLinks.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn">in</a>
+            <a href={settings.socialLinks.facebook} target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
+            <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>
             </a>
-            <a href="https://www.instagram.com/sm_photography.in?stkn=MXQ2amRrbHhkZXdjbA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="SM Photography Instagram">
+            <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="SM Photography Instagram">
               <span style={{ fontSize: '0.7rem' }}>SM</span>
             </a>
-            <a href="https://youtube.com/@sm_photography_film" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
-            <a href="https://wa.me/9511835507" target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>
+            <a href={settings.socialLinks.youtube} target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
+            <a href={`https://wa.me/${settings.whatsappNumber}`} target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>
           </div>
         </div>
 

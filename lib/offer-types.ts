@@ -8,7 +8,10 @@ export type Offer = {
   image: string;
   discountType: 'percentage' | 'fixed' | 'none';
   discountValue: number;
+  originalPrice?: number | null;
+  discountedPrice?: number | null;
   packages: OfferPackage[];
+  placements?: Array<'home' | 'packages' | 'services'>;
   startsAt: string;
   endsAt: string | null;
   active: boolean;

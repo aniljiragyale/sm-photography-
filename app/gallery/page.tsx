@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { defaultGalleryItems, galleryCategories, loadPublishedContent, type GalleryItem } from '@/lib/admin-data';
+import { defaultGalleryItems, galleryCategories, subscribeToPublishedContent, type GalleryItem } from '@/lib/admin-data';
 
 export default function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -11,13 +11,14 @@ export default function GalleryPage() {
   const pageSize = 10;
 
   useEffect(() => {
-    loadPublishedContent().then((content) => setGalleryItems([...defaultGalleryItems, ...content.gallery]));
+    return subscribeToPublishedContent((content) => setGalleryItems([...defaultGalleryItems, ...content.gallery]));
   }, []);
 
   const filteredItems = useMemo(() => {
-    if (activeCategory === 'all') return galleryItems;
-    return galleryItems.filter((item) => item.category === activeCategory);
+    const matching = activeCategory === 'all' ? galleryItems : galleryItems.filter((item) => item.category === activeCategory);
+    return [...matching].sort((left, right) => Number(Boolean(right.featured)) - Number(Boolean(left.featured)));
   }, [activeCategory, galleryItems]);
+  const categories = useMemo(() => ['all', ...new Set([...galleryCategories.filter((category) => category !== 'all'), ...galleryItems.map((item) => item.category)])], [galleryItems]);
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const visibleItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
 
@@ -37,7 +38,7 @@ export default function GalleryPage() {
 
       <div className="page-content">
         <div className="gallery-filter-row">
-          {galleryCategories.map((category) => (
+          {categories.map((category) => (
             <button
               key={category}
               type="button"
@@ -58,6 +59,7 @@ export default function GalleryPage() {
                 <div className="thumb" style={{ backgroundImage: `url("${imageUrl}")` }} />
                 <div className="gallery-card-copy">
                   <span className="gallery-tag">{item.category}</span>
+                  {item.featured && <span className="offer-admin-featured">Featured</span>}
                   <h3>{item.title}</h3>
                   {item.description ? <p>{item.description}</p> : null}
                 </div>

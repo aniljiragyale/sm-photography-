@@ -1,11 +1,10 @@
-import { getBackendToken } from '@/lib/backend';
-
 export type GalleryItem = {
   id: string;
   title: string;
   category: string;
   image: string;
   description?: string;
+  featured?: boolean;
 };
 
 export type PackageItem = {
@@ -18,6 +17,9 @@ export type ServiceItem = {
   title: string;
   description: string;
   deliverables: string;
+  price?: string;
+  image?: string;
+  active?: boolean;
 };
 
 
@@ -36,6 +38,43 @@ export type PublishedContent = {
   gallery: GalleryItem[];
   branches: BranchItem[];
   bannerImage?: string;
+  offerPopup?: OfferPopupSettings;
+  settings?: WebsiteSettings;
+};
+
+export type OfferPopupSettings = { enabled: boolean; title: string; description: string; image: string };
+
+export const defaultOfferPopup: OfferPopupSettings = {
+  enabled: true,
+  title: 'Hurry Up! Special Offers Are Waiting for You!',
+  description: 'Book your photography session today and make your beautiful memories unforgettable.',
+  image: '',
+};
+
+export type WebsiteSettings = {
+  contactPhone: string;
+  contactEmail: string;
+  whatsappNumber: string;
+  socialLinks: { facebook: string; instagram: string; youtube: string; linkedin: string };
+  testimonials: Array<{ quote: string; name: string; role: string }>;
+};
+
+export const defaultWebsiteSettings: WebsiteSettings = {
+  contactPhone: '+91 95118 35507',
+  contactEmail: 'smphotography5207@gmail.com',
+  whatsappNumber: '919511835507',
+  socialLinks: {
+    facebook: 'https://www.facebook.com/share/1FDbovcGCA',
+    instagram: 'https://www.instagram.com/sm_photography.in/',
+    youtube: 'https://youtube.com/@sm_photography_film',
+    linkedin: 'https://www.linkedin.com/in/satishmolekar',
+  },
+  testimonials: [
+    { quote: 'The photographs feel full of emotion and every important family moment was beautifully captured.', name: 'Anita Desai', role: 'Wedding client' },
+    { quote: 'Professional, comfortable, and creative from the first consultation to the final delivery.', name: 'Sarah Jenkins', role: 'Pre-wedding client' },
+    { quote: 'The team made our celebration feel effortless and delivered memories we will keep forever.', name: 'Rahul Sharma', role: 'Event client' },
+    { quote: 'Beautiful direction, thoughtful details, and photographs that look natural and timeless.', name: 'David Lim', role: 'Portrait client' },
+  ],
 };
 
 export const DEFAULT_BANNER_IMAGE = '/images/Prewedding (21).jpg';
@@ -216,6 +255,8 @@ export async function loadPublishedContent(): Promise<PublishedContent> {
       gallery: content.gallery || [],
       branches: [...branchMap.values()],
       bannerImage: content.bannerImage || DEFAULT_BANNER_IMAGE,
+      offerPopup: content.offerPopup || defaultOfferPopup,
+      settings: content.settings || defaultWebsiteSettings,
     };
   } catch {
     const localGallery = getCustomGalleryItems();
@@ -228,17 +269,33 @@ export async function loadPublishedContent(): Promise<PublishedContent> {
       gallery: getCustomGalleryItems(),
       branches: defaultBranches,
       bannerImage: localBannerImage || getBannerImage(),
+      offerPopup: defaultOfferPopup,
+      settings: defaultWebsiteSettings,
     };
   }
 }
 
+export function subscribeToPublishedContent(onContent: (content: PublishedContent) => void, intervalMs = 15000): () => void {
+  let active = true;
+  const refresh = () => {
+    void loadPublishedContent().then((content) => { if (active) onContent(content); });
+  };
+  refresh();
+  const timer = window.setInterval(refresh, intervalMs);
+  const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+  document.addEventListener('visibilitychange', onVisible);
+  return () => {
+    active = false;
+    window.clearInterval(timer);
+    document.removeEventListener('visibilitychange', onVisible);
+  };
+}
+
 export async function savePublishedContent(content: PublishedContent): Promise<boolean> {
   try {
-    const token = getBackendToken();
-    if (!token) return false;
     const response = await fetch('/api/content', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(content),
     });
     if (!response.ok) return false;
@@ -254,11 +311,8 @@ export async function savePublishedContent(content: PublishedContent): Promise<b
 
 export async function resetPublishedContent(): Promise<boolean> {
   try {
-    const token = getBackendToken();
-    if (!token) return false;
     const response = await fetch('/api/content', {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) return false;
     resetContent();

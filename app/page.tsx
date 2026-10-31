@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { DEFAULT_BANNER_IMAGE, defaultServices, loadPublishedContent, type ServiceItem } from '@/lib/admin-data';
+import { DEFAULT_BANNER_IMAGE, defaultServices, defaultWebsiteSettings, subscribeToPublishedContent, type ServiceItem, type WebsiteSettings } from '@/lib/admin-data';
 import { HomeOfferPopup } from '@/components/home-offer-popup';
 import { SiteOfferBadge } from '@/components/site-offer-badge';
+import { OffersGrid } from '@/components/offers-grid';
 
 const galleryMoments = [
   {
@@ -88,12 +89,7 @@ const serviceCategories: Record<string, string> = {
   'Drone Shoot': 'AERIAL',
 };
 
-const reviews = [
-  { quote: 'The photographs feel full of emotion and every important family moment was beautifully captured.', name: 'Anita Desai', role: 'Wedding client', initials: 'AD' },
-  { quote: 'Professional, comfortable, and creative from the first consultation to the final gallery.', name: 'Sarah Jenkins', role: 'Pre-wedding client', initials: 'SJ' },
-  { quote: 'The team made our celebration feel effortless and delivered memories we will keep forever.', name: 'Rahul Sharma', role: 'Event client', initials: 'RS' },
-  { quote: 'Beautiful direction, thoughtful details, and photographs that look natural and timeless.', name: 'David Lim', role: 'Portrait client', initials: 'DL' },
-];
+const defaultReviews = defaultWebsiteSettings.testimonials.map((review) => ({ ...review, initials: review.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase() }));
 
 export default function HomePage() {
   const statsRef = useRef<HTMLElement | null>(null);
@@ -103,11 +99,16 @@ export default function HomePage() {
 
   const [bannerImage, setBannerImage] = useState(DEFAULT_BANNER_IMAGE);
   const [homeServices, setHomeServices] = useState<ServiceItem[]>(defaultServices);
+  const [homeReviews, setHomeReviews] = useState(defaultReviews);
+  const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings>(defaultWebsiteSettings);
 
   useEffect(() => {
-    loadPublishedContent().then((content) => {
+    return subscribeToPublishedContent((content) => {
       if (content.bannerImage) setBannerImage(content.bannerImage);
-      setHomeServices(content.services);
+      setHomeServices(content.services.filter((service) => service.active !== false));
+      const settings = content.settings || defaultWebsiteSettings;
+      setWebsiteSettings(settings);
+      setHomeReviews(settings.testimonials.map((review) => ({ ...review, initials: review.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase() })));
     });
   }, []);
 
@@ -174,6 +175,7 @@ export default function HomePage() {
       </header>
 
       <HomeOfferPopup />
+      <OffersGrid placement="home" compact />
 
       <section ref={statsRef} className="stats-strip" aria-label="Business stats">
         {stats.map((item, index) => (
@@ -256,12 +258,14 @@ export default function HomePage() {
           <div className="signature-services-grid">
             {homeServices.map((service, index) => (
               <article key={service.title} className={`signature-service-item${index === 0 ? ' signature-service-item--feature' : ''} animated-card`} style={{ animationDelay: `${index * 75}ms` }}>
+                {service.image && <img className="signature-service-image" src={service.image} alt="" loading="lazy" decoding="async" />}
                 <div className="signature-service-meta">
                   <span className="signature-service-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
                   <span className="signature-service-category">{serviceCategories[service.title] || 'PHOTOGRAPHY'}</span>
                 </div>
                 <h3>{service.title}</h3>
                 <p>{service.description}</p>
+                {service.price && <strong className="service-price">{service.price}</strong>}
                 <span className="signature-service-orbit" aria-hidden="true" />
               </article>
             ))}
@@ -285,7 +289,7 @@ export default function HomePage() {
             <div className="reviews-loop">
               {[0, 1].map((group) => (
                 <div className="reviews-group" aria-hidden={group === 1} key={group}>
-                  {reviews.map((review) => (
+                  {homeReviews.map((review) => (
                     <article className="review-card" key={`${group}-${review.name}`}>
                       <div className="review-stars" aria-label="5 out of 5 stars">★★★★★</div>
                       <p className="review-quote">“{review.quote}”</p>
@@ -323,10 +327,10 @@ export default function HomePage() {
 
           <ul className="contact-details">
             <li>
-              <strong>Phone:</strong> <span className="nowrap">+91-95118 35507</span>
+              <strong>Phone:</strong> <a className="nowrap" href={`tel:${websiteSettings.contactPhone.replace(/[^+\d]/g, '')}`}>{websiteSettings.contactPhone}</a>
             </li>
             <li>
-              <strong>Email:</strong> <a href="mailto:smphotography5207@gmail.com">smphotography5207@gmail.com</a>
+              <strong>Email:</strong> <a href={`mailto:${websiteSettings.contactEmail}`}>{websiteSettings.contactEmail}</a>
             </li>
             <li>
               <strong>Branch 1:</strong> <a href="https://maps.app.goo.gl/AwgoQrcp92duJkoT6" target="_blank" rel="noreferrer">SM Photo Studio &amp; Films - Malgaon</a>
@@ -337,16 +341,16 @@ export default function HomePage() {
           </ul>
 
           <div className="social-links">
-            <a href="https://www.linkedin.com/in/satishmolekar" target="_blank" rel="noreferrer" aria-label="LinkedIn">in</a>
-            <a href="https://www.facebook.com/share/1FDbovcGCA" target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
-            <a href="https://www.instagram.com/sm_photography.in?stkn=MXQ2amRrbHhkZXdjbA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="SM Photography Instagram">
+            <a href={websiteSettings.socialLinks.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn">in</a>
+            <a href={websiteSettings.socialLinks.facebook} target="_blank" rel="noreferrer" aria-label="Facebook">f</a>
+            <a href={websiteSettings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="SM Photography Instagram">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" /></svg>
             </a>
-            <a href="https://www.instagram.com/the_sm_studio__?stkn=ZzU2eW1oenUwdXVl&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="The SM Studio Instagram">
+            <a href={websiteSettings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="The SM Studio Instagram">
               <span style={{ fontSize: '0.7rem' }}>SM</span>
             </a>
-            <a href="https://youtube.com/@sm_photography_film" target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
-            <a href="https://wa.me/9511835507" target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>
+            <a href={websiteSettings.socialLinks.youtube} target="_blank" rel="noreferrer" aria-label="YouTube">▶</a>
+            <a href={`https://wa.me/${websiteSettings.whatsappNumber}`} target="_blank" rel="noreferrer" aria-label="WhatsApp">✆</a>
           </div>
         </div>
       </section>

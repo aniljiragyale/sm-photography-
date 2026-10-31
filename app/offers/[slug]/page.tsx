@@ -31,9 +31,11 @@ export default async function OfferPage({ params }: { params: { slug: string } }
           <div className="offer-detail-copy">
             {offer.label && <span className="offer-ribbon offer-detail-ribbon">{offer.label}</span>}
             <p className="offer-detail-discount">{formatOfferDiscount(offer)}</p>
+            {offer.originalPrice && offer.discountedPrice && <p className="offer-price"><del>₹{offer.originalPrice.toLocaleString('en-IN')}</del> <strong>₹{offer.discountedPrice.toLocaleString('en-IN')}</strong></p>}
             <h2>{offer.title}</h2>
             {getOfferIntro(offer.description) && <p className="offer-description-intro">{getOfferIntro(offer.description)}</p>}
             <p className="offer-detail-packages">Available for: {offer.packages.join(', ')}</p>
+            {offer.endsAt && <p className="offer-validity">Valid until {new Date(offer.endsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>}
             <OfferDetailActions offer={offer} />
           </div>
         </article>

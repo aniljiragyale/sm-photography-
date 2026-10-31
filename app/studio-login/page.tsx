@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ADMIN_EMAIL, setAdminLoggedIn } from '@/lib/admin-data';
-import { setBackendToken } from '@/lib/backend';
+import { clearBackendToken } from '@/lib/backend';
 
 export default function StudioLoginPage() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function StudioLoginPage() {
         return;
       }
 
-      setBackendToken(result.token);
+      clearBackendToken();
       setAdminLoggedIn(true);
       const nextPath = new URLSearchParams(window.location.search).get('next');
       router.push(nextPath?.startsWith('/') ? nextPath : '/studio');

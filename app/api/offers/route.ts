@@ -15,6 +15,13 @@ function validate(input: Partial<Offer>): string | null {
   if (input.discountType === 'percentage' && (!Number.isFinite(input.discountValue) || Number(input.discountValue) < 1 || Number(input.discountValue) > 100)) return 'Percentage discount must be between 1 and 100.';
   if (input.discountType === 'fixed' && (!Number.isFinite(input.discountValue) || Number(input.discountValue) <= 0 || Number(input.discountValue) > 10000000)) return 'Fixed discount must be greater than zero.';
   if (!Array.isArray(input.packages) || input.packages.length === 0 || input.packages.some((item) => !(OFFER_PACKAGES as readonly string[]).includes(item))) return 'Select at least one valid package.';
+  if (input.originalPrice != null && (!Number.isFinite(input.originalPrice) || input.originalPrice <= 0)) return 'Original price must be greater than zero.';
+  if (input.discountedPrice != null && (!Number.isFinite(input.discountedPrice) || input.discountedPrice <= 0)) return 'Offer price must be greater than zero.';
+  if ((input.originalPrice == null) !== (input.discountedPrice == null)) return 'Enter both original price and offer price, or leave both blank.';
+  if (input.originalPrice != null && input.discountedPrice != null && input.discountedPrice >= input.originalPrice) return 'Offer price must be lower than original price.';
+  if (input.originalPrice != null && input.discountedPrice != null && input.discountType === 'percentage' && Math.round((input.originalPrice - input.discountedPrice) / input.originalPrice * 100) !== Number(input.discountValue)) return 'Discount percent must match the original and offer prices.';
+  if (input.originalPrice != null && input.discountedPrice != null && input.discountType === 'fixed' && input.originalPrice - input.discountedPrice !== Number(input.discountValue)) return 'Fixed discount must match the difference between the original and offer prices.';
+  if (input.placements != null && (!Array.isArray(input.placements) || input.placements.length === 0 || input.placements.some((item) => !['home', 'packages', 'services'].includes(item)))) return 'Choose at least one valid offer placement.';
   if (typeof input.active !== 'boolean' || typeof input.featured !== 'boolean' || !['', 'Special Offer', 'Limited Time Offer'].includes(input.label || '')) return 'Invalid offer status or label.';
   if (input.image && !(input.image.startsWith('https://') || (input.image.startsWith('/') && !input.image.startsWith('//')))) return 'Offer image must use a secure URL.';
   return null;
@@ -43,10 +50,14 @@ export async function POST(request: Request) {
     const previous = existingOffers.find((offer) => offer.slug === input.slug);
     if (previous && input.existingId !== previous.id) return NextResponse.json({ error: 'That offer link is already in use.' }, { status: 409 });
     const now = new Date().toISOString();
+    const placements: NonNullable<Offer['placements']> = input.placements?.length ? [...new Set(input.placements)] : ['home', 'packages'];
+    if (input.featured && !placements.includes('home')) placements.push('home');
     const offer: Offer = {
       id: previous?.id || crypto.randomUUID(), slug: input.slug!, title: input.title!.trim(), description: input.description!.trim(),
       image: input.image || '', discountType: input.discountType!, discountValue: input.discountType === 'none' ? 0 : Number(input.discountValue),
+      originalPrice: input.originalPrice == null ? null : Number(input.originalPrice), discountedPrice: input.discountedPrice == null ? null : Number(input.discountedPrice),
       packages: [...new Set(input.packages!)], startsAt: new Date(input.startsAt!).toISOString(), endsAt: input.endsAt ? new Date(input.endsAt).toISOString() : null,
+      placements,
       active: input.active!, featured: input.featured!, label: input.label || '', createdAt: previous?.createdAt || now, updatedAt: now,
     };
     if (offer.featured) {

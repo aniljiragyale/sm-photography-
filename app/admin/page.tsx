@@ -11,6 +11,8 @@ import {
   defaultServices,
   defaultBranches,
   defaultGalleryItems,
+  defaultOfferPopup,
+  defaultWebsiteSettings,
   loadPublishedContent,
   isAdminLoggedIn,
   resetPublishedContent,
@@ -21,6 +23,8 @@ import {
   type PackageItem,
   type ServiceItem,
   type BranchItem,
+  type OfferPopupSettings,
+  type WebsiteSettings,
 } from '@/lib/admin-data';
 import { clearBackendToken, getBackendToken } from '@/lib/backend';
 
@@ -29,6 +33,7 @@ const initialForm = {
   category: 'wedding',
   image: '',
   description: '',
+  featured: false,
 };
 
 type AnalyticsSummary = { totalVisits: number; dailyVisits: Array<{ date: string; visits: number }> };
@@ -38,13 +43,17 @@ export default function AdminPage() {
   const [isReady, setIsReady] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [items, setItems] = useState<GalleryItem[]>([]);
+  const [editingGalleryId, setEditingGalleryId] = useState<string | null>(null);
   const [packages, setPackages] = useState<PackageItem[]>(defaultPackages);
   const [services, setServices] = useState<ServiceItem[]>(defaultServices);
   const [branches, setBranches] = useState<BranchItem[]>(defaultBranches);
   const [bannerImage, setBannerImage] = useState('');
+  const [offerPopup, setOfferPopup] = useState<OfferPopupSettings>(defaultOfferPopup);
+  const [websiteSettings, setWebsiteSettings] = useState<WebsiteSettings>(defaultWebsiteSettings);
   const [isBannerUploading, setIsBannerUploading] = useState(false);
   const [isBannerSaving, setIsBannerSaving] = useState(false);
   const [isBranchesSaving, setIsBranchesSaving] = useState(false);
+  const [serviceUploadIndex, setServiceUploadIndex] = useState<number | null>(null);
   const [branchMessage, setBranchMessage] = useState('');
   const [message, setMessage] = useState('');
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -74,6 +83,8 @@ export default function AdminPage() {
       setServices(content.services);
       setBranches(content.branches);
       setBannerImage(content.bannerImage || '');
+      setOfferPopup(content.offerPopup || defaultOfferPopup);
+      setWebsiteSettings(content.settings || defaultWebsiteSettings);
       setItems([...defaultGalleryItems, ...content.gallery]);
     });
     setIsReady(true);
@@ -109,34 +120,46 @@ export default function AdminPage() {
     }
 
     const newItem: GalleryItem = {
-      id: `${form.category}-${Date.now()}`,
+      id: editingGalleryId || `${form.category}-${Date.now()}`,
       title: form.title.trim(),
       category: form.category,
       image: form.image.trim(),
       description: form.description.trim(),
+      featured: form.featured,
     };
 
-    const nextItems = [...getCustomGalleryItems(), newItem];
-    saveCustomGalleryItems(nextItems);
     const content = await loadPublishedContent();
-    const isPublished = await savePublishedContent({ packages, services, gallery: [...content.gallery, newItem], branches: content.branches });
-    setItems([...defaultGalleryItems, ...content.gallery, newItem]);
+    const nextGallery = editingGalleryId
+      ? content.gallery.map((item) => item.id === editingGalleryId ? newItem : item)
+      : [...content.gallery, newItem];
+    saveCustomGalleryItems(nextGallery.filter((item) => !defaultGalleryItems.some((defaultItem) => defaultItem.id === item.id)));
+    const isPublished = await savePublishedContent({ ...content, packages, services, gallery: nextGallery, branches: content.branches });
+    setItems([...defaultGalleryItems, ...nextGallery]);
     setForm(initialForm);
-    setMessage(isPublished ? 'New gallery item added successfully and is now visible in the public gallery.' : 'Could not publish the photo. Confirm admin login and configure Vercel Blob for deployed image uploads.');
+    setEditingGalleryId(null);
+    setMessage(isPublished ? (editingGalleryId ? 'Gallery photo updated on the public website.' : 'New gallery item added and published.') : 'Could not publish the photo. Check your admin session and Redis settings.');
+  };
+
+  const editGalleryItem = (item: GalleryItem) => {
+    setEditingGalleryId(item.id);
+    setForm({ title: item.title, category: item.category, image: item.image, description: item.description || '', featured: Boolean(item.featured) });
+    setMessage('Edit the selected gallery photo, then save it.');
   };
 
   const removeItem = async (id: string) => {
     const nextItems = getCustomGalleryItems().filter((item) => item.id !== id);
     saveCustomGalleryItems(nextItems);
     const content = await loadPublishedContent();
-    const isPublished = await savePublishedContent({ packages, services, gallery: content.gallery.filter((item) => item.id !== id), branches: content.branches });
+    const isPublished = await savePublishedContent({ ...content, packages, services, gallery: content.gallery.filter((item) => item.id !== id), branches: content.branches });
     setItems([...defaultGalleryItems, ...content.gallery.filter((item) => item.id !== id)]);
+    if (editingGalleryId === id) { setEditingGalleryId(null); setForm(initialForm); }
     setMessage(isPublished ? 'Item removed from the public gallery.' : 'The item was removed in this browser only. Confirm admin login and configure Upstash Redis to publish the change.');
   };
 
   const logout = () => {
     clearBackendToken();
     setAdminLoggedIn(false);
+    void fetch('/api/admin/logout', { method: 'POST' });
     router.push('/');
   };
 
@@ -146,10 +169,12 @@ export default function AdminPage() {
     const currentContent = await loadPublishedContent();
     const content = {
       packages: validPackages.map((item) => ({ ...item, name: item.name.trim(), price: item.price.trim(), items: item.items.filter(Boolean) })),
-      services: validServices.map((item) => ({ ...item, title: item.title.trim(), description: item.description.trim(), deliverables: item.deliverables.trim() })),
+      services: validServices.map((item) => ({ ...item, title: item.title.trim(), description: item.description.trim(), deliverables: item.deliverables.trim(), active: item.active !== false })),
       gallery: currentContent.gallery,
       branches,
       bannerImage: bannerImage || currentContent.bannerImage || '/images/Prewedding (21).jpg',
+      offerPopup,
+      settings: websiteSettings,
     };
     const isPublished = await savePublishedContent(content);
     setPackages(content.packages);
@@ -179,6 +204,48 @@ export default function AdminPage() {
       setMessage('Studio banner upload failed. Check your connection and try again.');
     } finally {
       setIsBannerUploading(false);
+      input.value = '';
+    }
+  };
+
+  const handleServiceImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    const data = new FormData();
+    data.append('file', file);
+    setServiceUploadIndex(index);
+    setMessage('Uploading service image...');
+    try {
+      const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${getBackendToken() || ''}` }, body: data });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error || 'Service image upload failed.');
+      setServices((current) => current.map((service, itemIndex) => itemIndex === index ? { ...service, image: result.url } : service));
+      setMessage('Service image uploaded. Save changes to publish it.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Service image upload failed.');
+    } finally {
+      setServiceUploadIndex(null);
+      input.value = '';
+    }
+  };
+
+  const handlePopupImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    const data = new FormData();
+    data.append('file', file);
+    setMessage('Uploading popup image...');
+    try {
+      const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${getBackendToken() || ''}` }, body: data });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) throw new Error(result.error || 'Popup image upload failed.');
+      setOfferPopup((current) => ({ ...current, image: result.url || '' }));
+      setMessage('Popup image uploaded. Save changes to publish it.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Popup image upload failed.');
+    } finally {
       input.value = '';
     }
   };
@@ -253,6 +320,8 @@ export default function AdminPage() {
     setPackages(defaultPackages);
     setServices(defaultServices);
     setBannerImage('');
+    setOfferPopup(defaultOfferPopup);
+    setWebsiteSettings(defaultWebsiteSettings);
     setMessage(isPublished ? 'Packages and services restored for everyone.' : 'Restored in this browser only. Confirm admin login and configure Upstash Redis to publish changes for everyone.');
   };
 
@@ -305,6 +374,7 @@ export default function AdminPage() {
           <p>Create and publish homepage offers, upload promotional images, set dates, and copy shareable offer links.</p>
           <div className="admin-actions">
             <Link href="/studio/offers" className="submit-btn">Manage Offers</Link>
+            <Link href="/admin/bookings" className="btn btn-secondary">Manage Bookings</Link>
           </div>
         </section>
         <div className="admin-layout">
@@ -323,17 +393,14 @@ export default function AdminPage() {
 
               <label>
                 Category
-                <select
+                <input
                   className="field"
+                  list="gallery-category-options"
                   value={form.category}
                   onChange={(event) => updateField('category', event.target.value)}
-                >
-                  {galleryCategories.filter((item) => item !== 'all').map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Choose or enter a category"
+                />
+                <datalist id="gallery-category-options">{[...new Set([...galleryCategories.filter((item) => item !== 'all'), ...items.map((item) => item.category)])].map((category) => <option key={category} value={category} />)}</datalist>
               </label>
 
               <label>
@@ -366,10 +433,13 @@ export default function AdminPage() {
                 />
               </label>
 
+              <label className="offer-active-toggle"><input type="checkbox" checked={form.featured} onChange={(event) => setForm((current) => ({ ...current, featured: event.target.checked }))} /> Feature this photograph</label>
+
               <div className="admin-actions">
                 <button type="button" className="submit-btn" onClick={saveItem}>
-                  Save photo
+                  {editingGalleryId ? 'Update photo' : 'Save photo'}
                 </button>
+                {editingGalleryId && <button type="button" className="btn btn-secondary" onClick={() => { setEditingGalleryId(null); setForm(initialForm); setMessage('Photo edit cancelled.'); }}>Cancel edit</button>}
                 <Link href="/gallery" className="page-back">
                   View gallery
                 </Link>
@@ -392,7 +462,9 @@ export default function AdminPage() {
                       <h3>{item.title}</h3>
                       <p>{item.description || 'New gallery moment added by admin.'}</p>
                       <span className="admin-tag">{item.category}</span>
+                      {item.featured && <span className="offer-admin-featured">Featured photo</span>}
                     </div>
+                    <button type="button" className="btn btn-secondary" onClick={() => editGalleryItem(item)}>Edit</button>
                     <button type="button" className="remove-btn" onClick={() => removeItem(item.id)}>
                       Remove
                     </button>
@@ -434,6 +506,12 @@ export default function AdminPage() {
                   <label>Service title<input className="field" value={item.title} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, title: event.target.value } : entry))} /></label>
                   <label>Description<textarea className="field" rows={4} value={item.description} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, description: event.target.value } : entry))} /></label>
                   <label>What the client receives<textarea className="field" rows={3} value={item.deliverables} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, deliverables: event.target.value } : entry))} /></label>
+                  <div className="grid-form two-column-form">
+                    <label>Service price (optional)<input className="field" value={item.price || ''} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, price: event.target.value } : entry))} placeholder="Contact for pricing" /></label>
+                    <label>Service photo<input className="field" type="file" accept="image/*" disabled={serviceUploadIndex === index} onChange={(event) => void handleServiceImageUpload(event, index)} /></label>
+                  </div>
+                  {item.image && <img className="branch-admin-preview" src={item.image} alt={`${item.title} preview`} />}
+                  <label className="offer-active-toggle"><input type="checkbox" checked={item.active !== false} onChange={(event) => setServices((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, active: event.target.checked } : entry))} /> Show this service on the public website</label>
                   <button type="button" className="btn btn-secondary" onClick={() => setServices((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
                     Remove service
                   </button>
@@ -443,7 +521,7 @@ export default function AdminPage() {
             <button
               type="button"
               className="submit-btn"
-              onClick={() => setServices((current) => [...current, { title: 'New Service', description: '', deliverables: '' }])}
+              onClick={() => setServices((current) => [...current, { title: 'New Service', description: '', deliverables: '', active: true }])}
             >
               + Add another service
             </button>
@@ -466,6 +544,38 @@ export default function AdminPage() {
               </div>
               {message ? <p className="form-status" role="status">{message}</p> : null}
             </div>
+
+            <h3 className="admin-section-title">Homepage offer popup</h3>
+            <div className="content-editor-item">
+              <label className="offer-active-toggle"><input type="checkbox" checked={offerPopup.enabled} onChange={(event) => setOfferPopup((current) => ({ ...current, enabled: event.target.checked }))} /> Show promotional popup to visitors</label>
+              <label>Popup heading<input className="field" maxLength={120} value={offerPopup.title} onChange={(event) => setOfferPopup((current) => ({ ...current, title: event.target.value }))} /></label>
+              <label>Popup message<textarea className="field" rows={3} maxLength={500} value={offerPopup.description} onChange={(event) => setOfferPopup((current) => ({ ...current, description: event.target.value }))} /></label>
+              {offerPopup.image && <img className="offer-upload-preview" src={offerPopup.image} alt="Offer popup preview" />}
+              <label>Popup image<input className="field" type="file" accept="image/*" onChange={(event) => void handlePopupImageUpload(event)} /></label>
+              <p className="form-note">Save changes above to publish popup text, visibility, and image.</p>
+            </div>
+
+            <h3 className="admin-section-title">Contact details and social links</h3>
+            <div className="content-editor-item grid-form two-column-form">
+              <label>Phone number<input className="field" value={websiteSettings.contactPhone} onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactPhone: event.target.value }))} /></label>
+              <label>Contact email<input className="field" type="email" value={websiteSettings.contactEmail} onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactEmail: event.target.value }))} /></label>
+              <label>WhatsApp number (country code + number)<input className="field" value={websiteSettings.whatsappNumber} onChange={(event) => setWebsiteSettings((current) => ({ ...current, whatsappNumber: event.target.value.replace(/\D/g, '') }))} /></label>
+              <label>Facebook URL<input className="field" type="url" value={websiteSettings.socialLinks.facebook} onChange={(event) => setWebsiteSettings((current) => ({ ...current, socialLinks: { ...current.socialLinks, facebook: event.target.value } }))} /></label>
+              <label>Instagram URL<input className="field" type="url" value={websiteSettings.socialLinks.instagram} onChange={(event) => setWebsiteSettings((current) => ({ ...current, socialLinks: { ...current.socialLinks, instagram: event.target.value } }))} /></label>
+              <label>YouTube URL<input className="field" type="url" value={websiteSettings.socialLinks.youtube} onChange={(event) => setWebsiteSettings((current) => ({ ...current, socialLinks: { ...current.socialLinks, youtube: event.target.value } }))} /></label>
+              <label>LinkedIn URL<input className="field" type="url" value={websiteSettings.socialLinks.linkedin} onChange={(event) => setWebsiteSettings((current) => ({ ...current, socialLinks: { ...current.socialLinks, linkedin: event.target.value } }))} /></label>
+            </div>
+
+            <h3 className="admin-section-title">Homepage testimonials</h3>
+            <div className="content-editor-list">
+              {websiteSettings.testimonials.map((testimonial, index) => <div className="content-editor-item" key={`testimonial-${index}`}>
+                <label>Client quote<textarea className="field" rows={3} value={testimonial.quote} onChange={(event) => setWebsiteSettings((current) => ({ ...current, testimonials: current.testimonials.map((item, itemIndex) => itemIndex === index ? { ...item, quote: event.target.value } : item) }))} /></label>
+                <div className="grid-form two-column-form"><label>Client name<input className="field" value={testimonial.name} onChange={(event) => setWebsiteSettings((current) => ({ ...current, testimonials: current.testimonials.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item) }))} /></label><label>Client type<input className="field" value={testimonial.role} onChange={(event) => setWebsiteSettings((current) => ({ ...current, testimonials: current.testimonials.map((item, itemIndex) => itemIndex === index ? { ...item, role: event.target.value } : item) }))} /></label></div>
+                <button type="button" className="btn btn-secondary" onClick={() => setWebsiteSettings((current) => ({ ...current, testimonials: current.testimonials.filter((_, itemIndex) => itemIndex !== index) }))}>Remove testimonial</button>
+              </div>)}
+            </div>
+            <button type="button" className="submit-btn" onClick={() => setWebsiteSettings((current) => ({ ...current, testimonials: [...current.testimonials, { quote: '', name: '', role: '' }] }))}>+ Add testimonial</button>
+            <p className="form-note">Save changes above to publish contact details, social links, and testimonials.</p>
 
             <h3 className="admin-section-title">Studio branch banner images</h3>
             <p className="form-note">Each uploaded photo is published automatically to its matching branch card on the About page. Save below after editing branch names, addresses, links, or descriptions.</p>

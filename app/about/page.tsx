@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { defaultBranches, loadPublishedContent, type BranchItem } from '@/lib/admin-data';
+import { defaultBranches, subscribeToPublishedContent, type BranchItem } from '@/lib/admin-data';
 
 const strengths = [
   {
@@ -31,7 +31,7 @@ export default function AboutPage() {
   const [branches, setBranches] = useState<BranchItem[]>(defaultBranches);
 
   useEffect(() => {
-    loadPublishedContent().then((content) => setBranches(content.branches));
+    return subscribeToPublishedContent((content) => setBranches(content.branches));
   }, []);
 
   return (

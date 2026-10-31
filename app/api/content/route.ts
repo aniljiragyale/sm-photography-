@@ -2,7 +2,7 @@ import { Redis } from '@upstash/redis';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { DEFAULT_BANNER_IMAGE, defaultBranches, defaultPackages, defaultServices, type BranchItem, type GalleryItem, type PackageItem, type ServiceItem } from '@/lib/admin-data';
+import { DEFAULT_BANNER_IMAGE, defaultBranches, defaultOfferPopup, defaultPackages, defaultServices, defaultWebsiteSettings, type BranchItem, type GalleryItem, type OfferPopupSettings, type PackageItem, type ServiceItem, type WebsiteSettings } from '@/lib/admin-data';
 import { isStudioAdmin } from '@/lib/offer-auth';
 
 const CONTENT_KEY = 'sm-photography:published-content';
@@ -18,9 +18,11 @@ export type PublishedContent = {
   gallery: GalleryItem[];
   branches: BranchItem[];
   bannerImage?: string;
+  offerPopup?: OfferPopupSettings;
+  settings?: WebsiteSettings;
 };
 
-const getDefaults = (): PublishedContent => ({ packages: defaultPackages, services: defaultServices, gallery: [], branches: defaultBranches, bannerImage: DEFAULT_BANNER_IMAGE });
+const getDefaults = (): PublishedContent => ({ packages: defaultPackages, services: defaultServices, gallery: [], branches: defaultBranches, bannerImage: DEFAULT_BANNER_IMAGE, offerPopup: defaultOfferPopup, settings: defaultWebsiteSettings });
 const hasRedisConfig = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 
 let localContent: PublishedContent | null = null;
@@ -28,7 +30,7 @@ let localContent: PublishedContent | null = null;
 const withDefaultPackages = (content: PublishedContent): PublishedContent => {
   const packageMap = new Map(defaultPackages.map((item) => [item.name, item]));
   content.packages.forEach((item) => packageMap.set(item.name, item));
-  return { ...content, packages: [...packageMap.values()], bannerImage: content.bannerImage || DEFAULT_BANNER_IMAGE };
+  return { ...content, packages: [...packageMap.values()], bannerImage: content.bannerImage || DEFAULT_BANNER_IMAGE, offerPopup: content.offerPopup || defaultOfferPopup, settings: content.settings || defaultWebsiteSettings };
 };
 
 async function readLocalContent(): Promise<PublishedContent | null> {
@@ -42,6 +44,8 @@ async function readLocalContent(): Promise<PublishedContent | null> {
       gallery: Array.isArray(parsed.gallery) ? parsed.gallery as GalleryItem[] : [],
       branches: Array.isArray(parsed.branches) ? parsed.branches as BranchItem[] : defaultBranches,
       bannerImage: typeof parsed.bannerImage === 'string' ? parsed.bannerImage : DEFAULT_BANNER_IMAGE,
+      offerPopup: parsed.offerPopup && typeof parsed.offerPopup === 'object' ? parsed.offerPopup as OfferPopupSettings : defaultOfferPopup,
+      settings: parsed.settings && typeof parsed.settings === 'object' ? parsed.settings as WebsiteSettings : defaultWebsiteSettings,
     };
   } catch {
     return null;
@@ -93,6 +97,8 @@ export async function POST(request: Request) {
       gallery: content.gallery,
       branches: content.branches,
       bannerImage: content.bannerImage || DEFAULT_BANNER_IMAGE,
+      offerPopup: content.offerPopup || defaultOfferPopup,
+      settings: content.settings || defaultWebsiteSettings,
     };
 
     if (!hasRedisConfig()) {

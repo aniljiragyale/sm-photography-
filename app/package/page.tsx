@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { defaultPackages, loadPublishedContent, type PackageItem } from '@/lib/admin-data';
+import { defaultPackages, subscribeToPublishedContent, type PackageItem } from '@/lib/admin-data';
 import { OffersGrid } from '@/components/offers-grid';
 
 const WHATSAPP_NUMBER = '919511835507';
@@ -23,7 +23,7 @@ export default function PackagePage() {
   const [packages, setPackages] = useState<PackageItem[]>(defaultPackages);
 
   useEffect(() => {
-    loadPublishedContent().then((content) => setPackages(content.packages));
+    return subscribeToPublishedContent((content) => setPackages(content.packages));
   }, []);
 
   return (

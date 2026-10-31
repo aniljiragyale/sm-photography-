@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAdminLoggedIn, setAdminLoggedIn } from '@/lib/admin-data';
-import { clearBackendToken, getBackendToken } from '@/lib/backend';
+import { clearBackendToken } from '@/lib/backend';
 
-type EventSummary = { id: number; status: string; photo_count: number; selection_count: number };
+type EventSummary = { id: string; status: string; photos: Array<{ id: string }>; submissions: Array<{ selectedCount: number }> };
 
 export default function StudioDashboardPage() {
   const router = useRouter();
@@ -17,8 +17,7 @@ export default function StudioDashboardPage() {
       router.replace('/studio-login');
       return;
     }
-    const token = getBackendToken();
-    fetch('http://localhost:4000/api/events', { headers: { Authorization: token ? `Bearer ${token}` : '' } })
+    fetch('/api/admin/galleries', { cache: 'no-store' })
       .then(async (response) => {
         if (response.status === 401) {
           router.replace('/studio-login');
@@ -43,7 +42,7 @@ export default function StudioDashboardPage() {
           <p className="eyebrow">Studio dashboard</p>
           <h1>SM Photography Studio</h1>
         </div>
-        <button type="button" className="btn btn-secondary" onClick={() => { clearBackendToken(); setAdminLoggedIn(false); router.push('/'); }}>
+        <button type="button" className="btn btn-secondary" onClick={() => { clearBackendToken(); setAdminLoggedIn(false); void fetch('/api/admin/logout', { method: 'POST' }); router.push('/'); }}>
           Logout
         </button>
       </div>
@@ -55,8 +54,8 @@ export default function StudioDashboardPage() {
             <div className="stats-strip" style={{ marginTop: 0, marginBottom: '1rem' }}>
               <div className="stat-box"><span>{events.length}</span><small>Total Events</small></div>
               <div className="stat-box"><span>{events.filter((event) => event.status === 'active').length}</span><small>Active Events</small></div>
-              <div className="stat-box"><span>{events.reduce((total, event) => total + Number(event.photo_count || 0), 0)}</span><small>Total Photos</small></div>
-              <div className="stat-box"><span>{events.reduce((total, event) => total + Number(event.selection_count || 0), 0)}</span><small>Photos Selected</small></div>
+              <div className="stat-box"><span>{events.reduce((total, event) => total + event.photos.length, 0)}</span><small>Total Photos</small></div>
+              <div className="stat-box"><span>{events.reduce((total, event) => total + event.submissions.reduce((count, submission) => count + submission.selectedCount, 0), 0)}</span><small>Photos Selected</small></div>
             </div>
             <div className="admin-actions">
               <a className="btn btn-secondary" href="/studio/events">View Saved Events</a>

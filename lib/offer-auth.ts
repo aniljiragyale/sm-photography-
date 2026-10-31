@@ -2,7 +2,13 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 export function isStudioAdmin(request: Request): boolean {
   const secret = process.env.JWT_SECRET;
-  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const cookieToken = request.headers.get('cookie')
+    ?.split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('sm_admin_session='))
+    ?.slice('sm_admin_session='.length);
+  const token = bearer || cookieToken;
   if (!secret || !token) return false;
   const parts = token.split('.');
   if (parts.length !== 3) return false;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getGalleryById, getGalleryBySlug, readStore } from '@/lib/gallery-store';
+import { readStore } from '@/lib/gallery-store';
+import { createClientGallerySession } from '@/lib/client-gallery-auth';
 
 export async function POST(request: Request) {
   try {
@@ -25,7 +26,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 });
     }
 
-    return NextResponse.json({ ok: true, slug: gallery.slug });
+    const response = NextResponse.json({ ok: true, slug: gallery.slug });
+    response.cookies.set('sm_client_gallery_session', createClientGallerySession(gallery.id), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api/client/galleries',
+      maxAge: 12 * 60 * 60,
+    });
+    return response;
   } catch {
     return NextResponse.json({ error: 'Something went wrong while opening the gallery.' }, { status: 500 });
   }

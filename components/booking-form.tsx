@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { getEmailErrorMessage, sendBookingEmail } from '@/lib/email';
+import { subscribeToPublishedContent } from '@/lib/admin-data';
 
 type BookingPackage = { name: string };
 
@@ -46,18 +47,9 @@ export function BookingForm() {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    fetch('/api/content')
-      .then((response) => response.ok ? response.json() : null)
-      .then((content) => {
-        if (active && Array.isArray(content?.packages)) {
-          setPackages(content.packages.filter((item: unknown): item is BookingPackage =>
-            Boolean(item && typeof item === 'object' && 'name' in item && typeof item.name === 'string')
-          ));
-        }
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
+    return subscribeToPublishedContent((content) => {
+      setPackages(content.packages.filter((item) => typeof item.name === 'string').map(({ name }) => ({ name })));
+    });
   }, []);
 
   const availablePackages = useMemo(() => {
@@ -83,14 +75,40 @@ export function BookingForm() {
     setStatus('Sending your booking request...');
 
     try {
-      await sendBookingEmail(form);
-      setStatus('Booking request sent successfully. We will get back to you soon.');
+      const values = new FormData(form);
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: values.get('first_name'),
+          lastName: values.get('last_name'),
+          email: values.get('email'),
+          phone: values.get('phone'),
+          eventType: values.get('event_type_other') || values.get('event_type'),
+          packageName: values.get('package_other') || values.get('package'),
+          eventDate: values.get('event_date'),
+          venue: values.get('venue'),
+          schedule: values.get('schedule'),
+          referral: values.get('referral_other') || values.get('referral'),
+          offer: values.get('offer'),
+        }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || 'Booking request could not be saved.');
+
+      let emailWarning = '';
+      try {
+        await sendBookingEmail(form);
+      } catch (error) {
+        emailWarning = ` The request is saved, but the studio email notification failed: ${getEmailErrorMessage(error)}`;
+      }
+      setStatus(`Booking request saved successfully. We will get back to you soon.${emailWarning}`);
       form.reset();
       setEventType('');
       setPackageTier('');
       setReferral('');
     } catch (error) {
-      setStatus(`Booking request could not be sent: ${getEmailErrorMessage(error)}`);
+      setStatus(`Booking request could not be saved: ${error instanceof Error ? error.message : getEmailErrorMessage(error)}`);
     } finally {
       setIsSending(false);
     }
