@@ -38,7 +38,7 @@ export default function PackagePage() {
 
       <div className="page-content">
         <div className="package-grid">
-          {packages.filter((pkg) => !pkg.name.toLowerCase().includes('maternity')).map((pkg, index) => {
+          {packages.filter((pkg) => !pkg.name.toLowerCase().includes('terms')).map((pkg, index) => {
             const variant = getPackageVariant(pkg.name);
             const message = encodeURIComponent(`Hi, I am interested in the ${pkg.name} package. Please share the pricing and more details.`);
 
@@ -53,7 +53,7 @@ export default function PackagePage() {
                   {variant === 'gold' && <span className="package-highlight package-highlight-gold">Most Popular</span>}
                   {variant === 'diamond' && <span className="package-highlight package-highlight-diamond">Luxury</span>}
                 </div>
-                {variant !== 'maternity' && <div className="price">Contact us for pricing</div>}
+                <div className="price">{pkg.price || 'Contact us for pricing'}</div>
                 <ul>
                   {pkg.items.map((item) => (
                     <li key={item}>{item}</li>

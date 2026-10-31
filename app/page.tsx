@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { DEFAULT_BANNER_IMAGE, loadPublishedContent } from '@/lib/admin-data';
+import { DEFAULT_BANNER_IMAGE, defaultServices, loadPublishedContent, type ServiceItem } from '@/lib/admin-data';
 import { HomeOfferPopup } from '@/components/home-offer-popup';
 import { SiteOfferBadge } from '@/components/site-offer-badge';
 
@@ -76,28 +76,16 @@ const photoHighlights = [
   },
 ];
 
-const services = [
-  'Wedding Shoot',
-  'Pre-Wedding Shoot',
-  'Cinematic Videography',
-  'Maternity Photography',
-  'Outdoor Sessions',
-  'Event Coverage',
-  'Candid Photography',
-  'Modeling Portfolios',
-  'Drone Shoot',
-];
-
-const serviceDetails: Record<string, { category: string; description: string }> = {
-  'Wedding Shoot': { category: 'WEDDINGS', description: 'The full story of your day, captured with care from the quiet details to the dance floor.' },
-  'Pre-Wedding Shoot': { category: 'COUPLES', description: 'An easygoing session shaped around your story, your style, and a place you love.' },
-  'Cinematic Videography': { category: 'FILM', description: 'A polished film that brings the voices, movement, and feeling of your day back to life.' },
-  'Maternity Photography': { category: 'MATERNITY', description: 'A thoughtful portrait session celebrating this season and the connection already growing.' },
-  'Outdoor Sessions': { category: 'PORTRAITS', description: 'Natural portraits made outdoors, using beautiful light and room to feel at ease.' },
-  'Event Coverage': { category: 'CELEBRATIONS', description: 'The people, atmosphere, and small moments that make your gathering memorable.' },
-  'Candid Photography': { category: 'MOMENTS', description: 'Unposed expressions and real interactions, noticed as they happen.' },
-  'Modeling Portfolios': { category: 'PORTFOLIOS', description: 'Confident, varied portraits with considered direction, lighting, and composition.' },
-  'Drone Shoot': { category: 'AERIAL', description: 'A fresh perspective on your venue and celebration, captured from above.' },
+const serviceCategories: Record<string, string> = {
+  'Wedding Shoot': 'WEDDINGS',
+  'Pre-Wedding Shoot': 'COUPLES',
+  'Cinematic Videography': 'FILM',
+  'Maternity Photography': 'MATERNITY',
+  'Outdoor Sessions': 'PORTRAITS',
+  'Event Coverage': 'CELEBRATIONS',
+  'Candid Photography': 'MOMENTS',
+  'Modeling Portfolios': 'PORTFOLIOS',
+  'Drone Shoot': 'AERIAL',
 };
 
 const reviews = [
@@ -114,10 +102,12 @@ export default function HomePage() {
   const [counts, setCounts] = useState(stats.map(() => 0));
 
   const [bannerImage, setBannerImage] = useState(DEFAULT_BANNER_IMAGE);
+  const [homeServices, setHomeServices] = useState<ServiceItem[]>(defaultServices);
 
   useEffect(() => {
     loadPublishedContent().then((content) => {
       if (content.bannerImage) setBannerImage(content.bannerImage);
+      setHomeServices(content.services);
     });
   }, []);
 
@@ -264,14 +254,14 @@ export default function HomePage() {
             <p className="signature-services-intro">Photography and film for the moments you want to keep close—made with care, shaped around you.</p>
           </div>
           <div className="signature-services-grid">
-            {services.map((service, index) => (
-              <article key={service} className={`signature-service-item${index === 0 ? ' signature-service-item--feature' : ''} animated-card`} style={{ animationDelay: `${index * 75}ms` }}>
+            {homeServices.map((service, index) => (
+              <article key={service.title} className={`signature-service-item${index === 0 ? ' signature-service-item--feature' : ''} animated-card`} style={{ animationDelay: `${index * 75}ms` }}>
                 <div className="signature-service-meta">
                   <span className="signature-service-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="signature-service-category">{serviceDetails[service].category}</span>
+                  <span className="signature-service-category">{serviceCategories[service.title] || 'PHOTOGRAPHY'}</span>
                 </div>
-                <h3>{service}</h3>
-                <p>{serviceDetails[service].description}</p>
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
                 <span className="signature-service-orbit" aria-hidden="true" />
               </article>
             ))}

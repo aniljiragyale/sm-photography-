@@ -8,6 +8,10 @@ import { isStudioAdmin } from '@/lib/offer-auth';
 const CONTENT_KEY = 'sm-photography:published-content';
 const CONTENT_FILE = path.join(process.cwd(), 'data', 'published-content.json');
 
+// Content changes are written by admin POST requests and must be visible on
+// public pages immediately. Never let Next.js cache this Redis-backed route.
+export const dynamic = 'force-dynamic';
+
 export type PublishedContent = {
   packages: PackageItem[];
   services: ServiceItem[];
@@ -65,7 +69,7 @@ export async function GET() {
     const content = await Redis.fromEnv().get<PublishedContent>(CONTENT_KEY);
     return NextResponse.json(content ? withDefaultPackages(content) : getDefaults());
   } catch {
-    return NextResponse.json(getDefaults());
+    return NextResponse.json({ error: 'Unable to load published content.' }, { status: 503 });
   }
 }
 

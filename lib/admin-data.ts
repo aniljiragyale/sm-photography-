@@ -199,48 +199,40 @@ export function resetContent(): void {
 export async function loadPublishedContent(): Promise<PublishedContent> {
   try {
     const response = await fetch('/api/content', { cache: 'no-store' });
-    const content = response.ok ? ((await response.json()) as PublishedContent) : null;
+    if (!response.ok) throw new Error('Could not load published content.');
+    const content = (await response.json()) as PublishedContent;
+    const packageMap = new Map(defaultPackages.map((item) => [item.name, item]));
+    (content.packages || []).forEach((item) => packageMap.set(item.name, item));
+    const branchMap = new Map(defaultBranches.map((item) => [item.id, item]));
+    (content.branches || []).forEach((item) => branchMap.set(item.id, { ...branchMap.get(item.id), ...item }));
+
+    // A successful server response is authoritative. Browser-local admin
+    // values are only a fallback for an unavailable API and must not mask
+    // changes saved by another admin session/device.
+    return {
+      ...content,
+      packages: [...packageMap.values()],
+      services: content.services || defaultServices,
+      gallery: content.gallery || [],
+      branches: [...branchMap.values()],
+      bannerImage: content.bannerImage || DEFAULT_BANNER_IMAGE,
+    };
+  } catch {
     const localGallery = getCustomGalleryItems();
     const localPackages = getSavedContent<PackageItem[] | null>(ADMIN_PACKAGES_KEY, null);
     const localServices = getSavedContent<ServiceItem[] | null>(ADMIN_SERVICES_KEY, null);
     const localBannerImage = getSavedContent<string | null>(ADMIN_BANNER_KEY, null);
-    const mergedContent = content || { packages: defaultPackages, services: defaultServices, gallery: [...defaultGalleryItems], branches: defaultBranches, bannerImage: DEFAULT_BANNER_IMAGE };
-    const galleryById = new Map([...localGallery, ...mergedContent.gallery].map((item) => [item.id, item]));
-
-    const savedPackages = localPackages || mergedContent.packages;
-    const packageMap = new Map(defaultPackages.map((item) => [item.name, item]));
-    savedPackages.forEach((item) => packageMap.set(item.name, item));
-    const branchMap = new Map(defaultBranches.map((item) => [item.id, item]));
-    mergedContent.branches.forEach((item) => branchMap.set(item.id, {
-      ...branchMap.get(item.id),
-      ...item,
-      image: item.image || branchMap.get(item.id)?.image || '',
-    }));
-
     return {
-      ...mergedContent,
-      packages: [...packageMap.values()],
-      services: localServices || mergedContent.services,
-      gallery: [...galleryById.values()],
-      branches: [...branchMap.values()],
-      bannerImage: localBannerImage || mergedContent.bannerImage || DEFAULT_BANNER_IMAGE,
-    };
-  } catch {
-    return {
-      packages: getPackages(),
-      services: getServices(),
+      packages: localPackages || defaultPackages,
+      services: localServices || defaultServices,
       gallery: getCustomGalleryItems(),
       branches: defaultBranches,
-      bannerImage: getBannerImage(),
+      bannerImage: localBannerImage || getBannerImage(),
     };
   }
 }
 
 export async function savePublishedContent(content: PublishedContent): Promise<boolean> {
-  savePackages(content.packages);
-  saveServices(content.services);
-  saveBannerImage(content.bannerImage || DEFAULT_BANNER_IMAGE);
-
   try {
     const token = getBackendToken();
     if (!token) return false;
@@ -249,15 +241,18 @@ export async function savePublishedContent(content: PublishedContent): Promise<b
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(content),
     });
-    return response.ok;
+    if (!response.ok) return false;
+
+    savePackages(content.packages);
+    saveServices(content.services);
+    saveBannerImage(content.bannerImage || DEFAULT_BANNER_IMAGE);
+    return true;
   } catch {
     return false;
   }
 }
 
 export async function resetPublishedContent(): Promise<boolean> {
-  resetContent();
-
   try {
     const token = getBackendToken();
     if (!token) return false;
@@ -265,7 +260,9 @@ export async function resetPublishedContent(): Promise<boolean> {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
-    return response.ok;
+    if (!response.ok) return false;
+    resetContent();
+    return true;
   } catch {
     return false;
   }
